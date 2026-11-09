@@ -6,7 +6,6 @@ import type {
   registerSchema,
   resendOtpSchema,
   resetPasswordSchema,
-  signUpSchema,
   verifyOtpSchema,
 } from "@/schema/auth.schema";
 import type { Profile, PublicProfile } from "@/types/profile.types";
@@ -19,9 +18,6 @@ export type LoginParams = z.infer<typeof loginSchema>;
 export type RefreshParams = z.infer<typeof refreshSchema>;
 export type ForgotPasswordParams = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordParams = z.infer<typeof resetPasswordSchema>;
-
-/** @deprecated Template signup form type; replaced in Phase 3 (see `signUpSchema`). */
-export type SignUpParams = z.infer<typeof signUpSchema>;
 
 /** The caller of a protected route, resolved from a Supabase access token. */
 export type AuthenticatedUser = {

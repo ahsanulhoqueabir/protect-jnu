@@ -1,7 +1,7 @@
 # PROGRESS
 
 Last updated: 2026-11-09
-**Current phase:** Phase 2 closed 2026-11-09. Phase 3 NOT STARTED: the user asked to stop before Phase 3 (2026-11-09); waiting for an explicit go-ahead. Phase 3 gating decisions D-053 to D-056 are already recorded
+**Current phase:** Phase 3 IN PROGRESS (started 2026-11-09 on the user's go-ahead). Order: web admin pages first, then Flutter once the phone prerequisites (B-006) are fixed by the user
 
 Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]` blocked
 
@@ -11,7 +11,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 0 | Prerequisites, accounts, scaffolding | Done 2026-11-09 (user-confirmed; device run deferred, D-042) | — |
 | 1 | Supabase schema, RLS, domain enforcement, custom auth data model | Done 2026-11-09 (user-confirmed; open items B-008, B-009, B-012 carried) | 0 |
 | 2 | OTP lifecycle + Brevo integration (server) | Done 2026-11-09 (user-confirmed; both real emails looked good) | 1 |
-| 3 | Auth flows: Flutter + Admin web | Not started | 2 |
+| 3 | Auth flows: Flutter + Admin web | In progress (started 2026-11-09) | 2 |
 | 4 | SOS flow + live alerts list | Not started | 3 |
 | 5 | Live location + Leaflet map | Not started | 4 |
 | 6 | Real-time chat | Not started | 4 |
@@ -47,6 +47,23 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - PASS env: Brevo names in `.env.example`; user states real values added to `.env.local` (values not read).
 - NOT DONE: app run on emulator/device. `flutter devices` fails: adb protocol fault, port 5037 held by Code.exe; same error on port 5038; no Android emulator or AVD installed (`D:\Flutter\AndroidSDK\emulator` missing). Brevo sender verification status not confirmed by agent (Q-002).
 - Hosting Q-005: Vercel (recorded).
+
+## Phase 3 tasks
+Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-3-auth-flows.md`. Prerequisite Phase 2 done and user-confirmed. Answers 2026-11-09: contacts = name + phone only; phone format = the existing DB checks; web first.
+Web
+- [x] W1. Next 16 docs read (`16-proxy.md`, authentication guide cookie examples): `proxy.ts` is an optimistic check only; real check in the layout
+- [x] W2. Admin login `/login` -> `POST /api/admin/session` sets httpOnly, SameSite=Strict (Secure in production) cookies `pj_access` / `pj_refresh`; tokens not in the body. Template localStorage store, axios client, signup page and initializer deleted (D-033)
+- [x] W3. `/forgot-password` and `/reset-password` pages call the approved `/api/auth/*` endpoints with the shared Zod schemas
+- [x] W4. `proxy.ts` (matcher `/admin`) + `app/admin/layout.tsx` validates the token with Supabase and requires role admin on every request; expired access cookie goes through `GET /api/admin/session/refresh`; `DELETE /api/admin/session` revokes and clears
+- [x] W5. Evidence 2026-11-09: `tests/integration/admin-session.test.ts` 6 passed against the real dev project (student 403 and no cookies; admin gets httpOnly+strict cookies, tokens absent from body, cookie token authenticates as admin; refresh rotates cookie and rejects open redirect `//evil.com`; bad refresh -> /login; logout clears; proxy: no cookie -> /login, refresh only -> refresh route, access -> pass). `npm test` 81 passed; `npx tsc --noEmit` 0 errors; `npm run lint` clean; `npm run build` OK. Dev server: /login, /forgot-password, /reset-password 200; /admin and / without cookie 307 -> /login. 0 leftover test users. NOT yet done: manual browser run with a real admin account and a real reset email
+Flutter (after B-006 is fixed by the user)
+- [ ] F1. Verify and add packages: flutter_secure_storage, supabase_flutter (D-054)
+- [ ] F2. API client from `api-contract.md`; base URL via build config; debug cleartext exception (D-055)
+- [ ] F3. Sign up, OTP (6 inputs, states, 60 s resend), login/logout, session persistence, splash routing
+- [ ] F4. Forgot/reset password screens
+- [ ] F5. Emergency contacts (2-3, name + phone) and Profile
+- [ ] F6. go_router guards: unauthenticated, unverified, no contacts
+- [ ] F7. Unit/widget tests, then manual device run
 
 ## Phase 2 tasks
 Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-2-otp-brevo.md`. Prerequisite Phase 1 done and user-confirmed. `web/.env.local` has all 9 variables filled (names checked, values not read), including BREVO_API_KEY / BREVO_SENDER_EMAIL / BREVO_SENDER_NAME.
@@ -138,6 +155,7 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-025 | `app/` based on template github.com/ahsanulhoqueabir/flutter | User |
 | 2026-11-09 | D-042 | Close Phase 0 with device smoke test deferred to Phase 3 | User |
 | 2026-11-09 | D-053..D-056 | Phase 3 gating answers (recorded only, Phase 3 not started): minimal neutral theme #1F3A5F; flutter_secure_storage + supabase_flutter (versions to verify); local dev server as backend URL; physical Android phone for tests | User |
+| 2026-11-09 | D-057 | Phase 3 answers: contacts = name + phone only; phone format = existing DB checks; web first. Agent design (revisable): admin cookies `pj_access`/`pj_refresh`, refresh cookie lifetime 7 days (proposed, not in PRD), new routes `/api/admin/session[/refresh]` | User / agent |
 | 2026-11-09 | D-052 | Email domain = jnu.ac.bd or any subdomain; PRD 5.1 amended | User |
 | 2026-11-09 | D-051 | Vitest as test runner; @types/node bumped to ^24 | User |
 | 2026-11-09 | D-050 | API contract approved (R1-R7) | User |

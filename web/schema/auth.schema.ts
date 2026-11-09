@@ -83,21 +83,3 @@ export const resetPasswordSchema = z.object({
   code: codeField,
   new_password: newPasswordField,
 });
-
-/**
- * @deprecated Template signup form (name/username). Replaced by `registerSchema` when the
- * auth screens are rebuilt in Phase 3; kept only so the template page still compiles.
- */
-export const signUpSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
-  email: z.string().trim().toLowerCase().pipe(z.email("Enter a valid email")),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(72, "Password must be at most 72 characters"),
-  username: z
-    .string()
-    .trim()
-    .regex(/^[a-z0-9_]{3,30}$/i, "3–30 letters, numbers or underscores")
-    .optional(),
-});

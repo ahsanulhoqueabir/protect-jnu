@@ -1,127 +1,85 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useAuthStore } from "@/store/auth.store";
-import { Button } from "@/components/ui/button";
 import { loginSchema } from "@/schema/auth.schema";
+import {
+  AuthCard,
+  ErrorNote,
+  Field,
+  primaryButton,
+  readEnvelope,
+} from "@/components/auth/auth-ui";
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
-
-  const login = useAuthStore((s) => s.login);
-  const isProcessing = useAuthStore((s) => s.isProcessing);
-  const error = useAuthStore((s) => s.error);
-  const clearError = useAuthStore((s) => s.clearError);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const handleSubmit = async (e: FormEvent) => {
+  async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    clearError();
-    setFormError(null);
-
+    setError(null);
     const parsed = loginSchema.safeParse({ email, password });
     if (!parsed.success) {
-      setFormError(parsed.error.issues[0].message);
+      setError(parsed.error.issues[0].message);
       return;
     }
-
+    setBusy(true);
     try {
-      await login(parsed.data);
-      router.push("/"); // redirect to home on success
+      const res = await fetch("/api/admin/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+      const body = await readEnvelope(res);
+      if (!body.success) {
+        setError(body.error ?? "Sign in failed.");
+        return;
+      }
+      router.replace("/admin");
+      router.refresh();
     } catch {
-      // error is already set in the store
+      setError("Could not reach the server.");
+    } finally {
+      setBusy(false);
     }
-  };
+  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 dark:bg-black">
-      <div className="w-full max-w-sm">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
-            Sign in
-          </h1>
-          <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-            Welcome back — enter your credentials to continue.
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email */}
-          <div>
-            <label
-              htmlFor="email"
-              className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="block w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder-zinc-500 dark:focus:border-zinc-400"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="block w-full rounded-lg border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none transition-colors focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder-zinc-500 dark:focus:border-zinc-400"
-            />
-          </div>
-
-          {/* Error */}
-          {(formError || error) && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
-              {formError ?? error}
-            </p>
-          )}
-
-          {/* Submit */}
-          <Button
-            type="submit"
-            disabled={isProcessing}
-            className="w-full"
-            size="lg"
-          >
-            {isProcessing ? "Signing in…" : "Sign in"}
-          </Button>
-        </form>
-
-        {/* Footer */}
-        <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/signup"
-            className="font-medium text-zinc-900 underline-offset-2 hover:underline dark:text-white"
-          >
-            Create one
-          </Link>
-        </p>
-      </div>
-    </div>
+    <AuthCard title="Admin sign in" subtitle="Administrators only.">
+      <form onSubmit={onSubmit} className="space-y-5" noValidate>
+        <Field
+          id="email"
+          label="University email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Field
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <ErrorNote message={error} />
+        <button type="submit" disabled={busy} className={primaryButton}>
+          {busy ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
+      <p className="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+        <Link
+          href="/forgot-password"
+          className="font-medium text-[#1F3A5F] underline-offset-2 hover:underline dark:text-zinc-200"
+        >
+          Forgot password?
+        </Link>
+      </p>
+    </AuthCard>
   );
 }

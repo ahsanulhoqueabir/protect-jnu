@@ -7,7 +7,6 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/feedback/app_feedback.dart';
-import '../../auth/auth_providers.dart';
 import '../../sos/domain/sos_flow.dart';
 import '../../sos/presentation/sos_button.dart';
 import '../../sos/sos_providers.dart';
@@ -18,7 +17,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider).value;
     final alert = ref.watch(openAlertProvider);
 
     // After the alert exists: tell the student if no location was shared, then show the status screen.
@@ -44,11 +42,6 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (user != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                  child: Text('Welcome, ${user.fullName}', style: context.textTheme.titleMedium),
-                ),
               if (alert.isLoading && !alert.hasValue)
                 const CircularProgressIndicator()
               else if (open != null && open.status.isOpen) ...[
@@ -64,12 +57,6 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ] else
                 const SosButton(),
-              const SizedBox(height: AppSpacing.lg),
-              AppButton(
-                label: 'Photos and videos',
-                variant: AppButtonVariant.secondary,
-                onPressed: () => context.push(Routes.media),
-              ),
             ],
           ),
         ),

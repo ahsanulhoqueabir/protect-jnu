@@ -36,11 +36,13 @@ class ContactsNotifier extends AsyncNotifier<List<EmergencyContact>> {
   }
 }
 
-/// `null` while loading (or if loading failed), else whether the student has the 2 contacts
-/// required before using the app (FR-AUTH-10). The router waits on `null`.
+/// `null` while loading, else whether the student has the 2 contacts required before using the
+/// app (FR-AUTH-10). The router waits on `null`. If loading FAILED (offline, slow start) this is
+/// `true`: Home must stay reachable for the SOS button, and the gate applies as soon as a retry
+/// succeeds and confirms fewer than 2 contacts.
 final hasRequiredContactsProvider = Provider<bool?>((ref) {
   final contacts = ref.watch(contactsProvider);
-  if (contacts.hasError && !contacts.hasValue) return false;
+  if (contacts.hasError && !contacts.hasValue) return true;
   final list = contacts.value;
   return list == null ? null : list.length >= EmergencyContact.minRequired;
 });

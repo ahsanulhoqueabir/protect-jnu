@@ -106,7 +106,7 @@ void main() {
 
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('Welcome, Ada Lovelace'), findsOneWidget);
+    expect(find.text('SOS'), findsOneWidget);
   });
 
   testWidgets('unverified login goes to the OTP screen and no protected screen opens', (
@@ -142,7 +142,8 @@ void main() {
             '"email":"ada@cse.jnu.ac.bd","phone":null,"role":"user"}',
       },
     );
-    expect(find.textContaining('Welcome, Ada Lovelace'), findsOneWidget);
+    expect(find.textContaining('Welcome'), findsNothing);
+    expect(find.text('SOS'), findsOneWidget);
 
     for (final (path, expected) in const [
       ('/profile', 'B210305040'),

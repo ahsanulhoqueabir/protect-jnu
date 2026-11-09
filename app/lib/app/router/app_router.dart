@@ -19,6 +19,7 @@ import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/sos/presentation/active_alert_screen.dart';
 import '../../features/splash/splash_screen.dart';
+import '../../features/status/domain/legal_content.dart';
 import '../../features/status/presentation/legal_screen.dart';
 import '../../features/status/presentation/status_screens.dart';
 import 'app_shell.dart';
@@ -110,11 +111,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: Routes.terms,
-        builder: (_, _) => const LegalScreen(title: 'Terms of Service'),
+        builder: (_, _) =>
+            const LegalScreen(title: 'Terms of Service', sections: LegalContent.terms),
       ),
       GoRoute(
         path: Routes.privacy,
-        builder: (_, _) => const LegalScreen(title: 'Privacy Policy'),
+        builder: (_, _) =>
+            const LegalScreen(title: 'Privacy Policy', sections: LegalContent.privacy),
       ),
       GoRoute(path: Routes.offline, builder: (_, _) => const OfflineScreen()),
       GoRoute(path: Routes.maintenance, builder: (_, _) => const MaintenanceScreen()),

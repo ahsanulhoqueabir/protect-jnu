@@ -8,13 +8,9 @@ class LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            BrandMark(size: 56),
-            Gap(AppSpacing.lg),
-            CircularProgressIndicator(),
-          ],
-        ),
-      );
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [BrandMark(size: 56), Gap(AppSpacing.lg), CircularProgressIndicator()],
+    ),
+  );
 }

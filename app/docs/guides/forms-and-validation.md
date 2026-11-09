@@ -1,6 +1,6 @@
 # Forms and validation
 
-Build forms from the controls in `lib/shared/widgets/forms/` and the rules in `lib/core/forms/validators.dart`. That keeps behavior and error messages the same everywhere. To see every control running, open **Settings → Component gallery** in a dev build.
+Build forms from the controls in `lib/shared/widgets/forms/` and the rules in `lib/core/forms/validators.dart`. That keeps behavior and error messages the same everywhere.
 
 ## Controls
 

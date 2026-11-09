@@ -26,7 +26,14 @@ Supabase MCP is a **development-time** tool (PRD §7.2). The deployed apps never
 ## Tool names
 Exact MCP tool names are **not assumed** here. At Phase 0/1, list the connected MCP's tools and record them below.
 
-Recorded tools: _(fill in at Phase 0)_
+Recorded 2026-11-09 (tool names as exposed in the agent session as `mcp__supabase__*`; read-only proof of connectivity: `get_project_url`, `list_tables`):
+- Schema/data: `list_tables`, `list_extensions`, `list_migrations`, `apply_migration`, `execute_sql`, `generate_typescript_types`
+- Diagnostics: `get_advisors`, `query_logs`, `search_docs`
+- Project: `get_project_url`, `get_publishable_keys` (returns keys: never paste into docs or logs)
+- Edge functions: `list_edge_functions`, `get_edge_function`, `deploy_edge_function`, `create_edge_function_secret` (not used by this project; server code lives in `web/`)
+- Branching: `create_branch`, `list_branches`, `merge_branch`, `rebase_branch`, `reset_branch`, `delete_branch`
+- Notebooks/feedback: `list_notebooks`, `get_notebook`, `submit_feedback`, `delete_feedback`
+- Project ref: `bthjjlpylvauiolwrdfn` (development, disposable data per user 2026-11-09).
 
 ## RLS test protocol
 Create student A, student B, admin. For each table and operation (select/insert/update/delete) assert expected allow/deny for A, B, admin, and anonymous. Save the matrix to `docs/phases/phase-1-rls-test-matrix.md` with pass/fail.

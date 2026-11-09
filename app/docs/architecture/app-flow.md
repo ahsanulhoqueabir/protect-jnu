@@ -3,27 +3,25 @@
 ## What happens at launch
 
 ```
-Splash ──> Onboarding (first launch only) ──> Login ──> Home
-                                               ▲          │
-                                               └ sign out / session expired
+Splash ──> Login ──> Home
+             ▲          │
+             └ sign out / session expired
 ```
 
-You don't navigate between these by hand. `resolveRedirect` in `lib/app/router/app_router.dart` looks at the session and onboarding state and sends the user to the right place. It re-runs whenever either one changes, so signing in only has to update `authProvider`.
+You don't navigate between these by hand. `resolveRedirect` in `lib/app/router/app_router.dart` looks at the session state and sends the user to the right place. It re-runs whenever the session changes, so signing in only has to update `authProvider`.
 
 ## Screens
 
 | Screen | Route | Notes |
 |---|---|---|
 | Splash | `/splash` | Shown while the session is restored |
-| Onboarding | `/onboarding` | Edit the `_pages` list |
 | Login, Register, Forgot password | `/login`, `/register`, `/forgot-password` | Signed-out users only |
 | Home (posts example) | `/`, `/posts/:id` | Search, pull to refresh, create, empty and error states |
 | Profile, Edit profile | `/profile`, `/profile/edit` | Warns about unsaved changes |
-| Settings, About | `/settings`, `/settings/about` | Theme, sign out, version, licenses |
+| Settings | `/settings` | Theme, sign out |
 | Terms, Privacy | `/legal/terms`, `/legal/privacy` | **Placeholder text: replace before release** |
 | Not found | any unknown path | Also bad deep links such as `/posts/abc` |
 | Offline, Maintenance | `/offline`, `/maintenance` | Full-screen versions, see below |
-| Component gallery | `/settings/gallery` | Developer catalog, removed from prod builds |
 
 Home, Profile and Settings live in `AppShell`: a bottom bar on phones and a side rail on wide screens. Each tab keeps its own back stack.
 

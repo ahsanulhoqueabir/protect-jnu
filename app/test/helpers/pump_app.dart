@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:protect_jnu/core/connectivity/connectivity_provider.dart';
 import 'package:protect_jnu/core/storage/storage_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Pumps [child] inside a [ProviderScope] + [MaterialApp] with in-memory prefs.
 ///

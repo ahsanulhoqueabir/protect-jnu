@@ -14,7 +14,6 @@ class LocalStorage {
   static const _kThemeMode = 'theme_mode';
   static const _kAuthToken = 'auth_token';
   static const _kUser = 'user';
-  static const _kOnboardingSeen = 'onboarding_seen';
 
   String? get themeMode => _prefs.getString(_kThemeMode);
   Future<void> setThemeMode(String value) => _prefs.setString(_kThemeMode, value);
@@ -36,9 +35,6 @@ class LocalStorage {
 
   Future<void> setUser(Map<String, dynamic>? value) =>
       value == null ? _prefs.remove(_kUser) : _prefs.setString(_kUser, jsonEncode(value));
-
-  bool get onboardingSeen => _prefs.getBool(_kOnboardingSeen) ?? false;
-  Future<void> setOnboardingSeen() => _prefs.setBool(_kOnboardingSeen, true);
 
   /// Removes everything tied to the signed-in user. Keeps device preferences.
   Future<void> clearSession() async {

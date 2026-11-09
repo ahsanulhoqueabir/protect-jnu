@@ -2,7 +2,6 @@
 /// never with hard-coded strings.
 abstract final class Routes {
   static const splash = '/splash';
-  static const onboarding = '/onboarding';
   static const login = '/login';
   static const register = '/register';
   static const forgotPassword = '/forgot-password';
@@ -12,8 +11,6 @@ abstract final class Routes {
   static const profile = '/profile';
   static const editProfile = '/profile/edit';
   static const settings = '/settings';
-  static const about = '/settings/about';
-  static const gallery = '/settings/gallery';
 
   static const terms = '/legal/terms';
   static const privacy = '/legal/privacy';

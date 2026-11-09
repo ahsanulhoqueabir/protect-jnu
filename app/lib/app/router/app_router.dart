@@ -2,21 +2,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/config/env.dart';
-import '../../features/about/presentation/about_screen.dart';
 import '../../features/auth/auth_providers.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
-import '../../features/gallery/presentation/gallery_screen.dart';
-import '../../features/onboarding/onboarding_provider.dart';
-import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/posts/presentation/post_detail_screen.dart';
 import '../../features/posts/presentation/posts_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
+import '../../features/status/presentation/legal_screen.dart';
 import '../../features/status/presentation/status_screens.dart';
 import 'app_shell.dart';
 import 'routes.dart';
@@ -27,16 +23,11 @@ String? resolveRedirect({
   required String? from,
   required bool isRestoring,
   required bool isSignedIn,
-  required bool onboardingSeen,
 }) {
   if (Routes.public.contains(location)) return null;
   if (isRestoring) return location == Routes.splash ? null : Routes.splash;
-  if (!onboardingSeen) return location == Routes.onboarding ? null : Routes.onboarding;
 
-  final inEntryFlow =
-      Routes.authOnly.contains(location) ||
-      location == Routes.splash ||
-      location == Routes.onboarding;
+  final inEntryFlow = Routes.authOnly.contains(location) || location == Routes.splash;
 
   if (!isSignedIn) {
     if (Routes.authOnly.contains(location)) return null;
@@ -56,7 +47,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   // Re-runs redirect when these change, without rebuilding the router itself.
   final refresh = ValueNotifier(0);
   ref.listen(authProvider, (_, _) => refresh.value++);
-  ref.listen(onboardingSeenProvider, (_, _) => refresh.value++);
 
   final router = GoRouter(
     initialLocation: Routes.splash,
@@ -69,12 +59,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         from: state.uri.queryParameters['from'],
         isRestoring: auth.isLoading && !auth.hasValue,
         isSignedIn: auth.value != null,
-        onboardingSeen: ref.read(onboardingSeenProvider),
       );
     },
     routes: [
       GoRoute(path: Routes.splash, builder: (_, _) => const SplashScreen()),
-      GoRoute(path: Routes.onboarding, builder: (_, _) => const OnboardingScreen()),
       GoRoute(path: Routes.login, builder: (_, _) => const LoginScreen()),
       GoRoute(path: Routes.register, builder: (_, _) => const RegisterScreen()),
       GoRoute(path: Routes.forgotPassword, builder: (_, _) => const ForgotPasswordScreen()),
@@ -111,12 +99,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
           StatefulShellBranch(
-            routes: [
-              GoRoute(path: Routes.settings, builder: (_, _) => const SettingsScreen()),
-              GoRoute(path: Routes.about, builder: (_, _) => const AboutScreen()),
-              if (!Env.isProd)
-                GoRoute(path: Routes.gallery, builder: (_, _) => const GalleryScreen()),
-            ],
+            routes: [GoRoute(path: Routes.settings, builder: (_, _) => const SettingsScreen())],
           ),
         ],
       ),

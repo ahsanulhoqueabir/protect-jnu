@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../app/router/routes.dart';
 import '../../../app/theme/app_spacing.dart';
-import '../../../core/config/env.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../shared/widgets/feedback/app_feedback.dart';
 import '../../auth/auth_providers.dart';
@@ -26,7 +23,6 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeModeProvider);
-    const chevron = Icon(Icons.chevron_right_rounded);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -44,29 +40,6 @@ class SettingsScreen extends ConsumerWidget {
               ],
               selected: {mode},
               onSelectionChanged: (s) => ref.read(themeModeProvider.notifier).set(s.first),
-            ),
-          ),
-          const _Section('General'),
-          Card(
-            child: Column(
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.info_outline_rounded),
-                  title: const Text('About'),
-                  trailing: chevron,
-                  onTap: () => context.push(Routes.about),
-                ),
-                if (!Env.isProd) ...[
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.widgets_outlined),
-                    title: const Text('Component gallery'),
-                    subtitle: const Text('Environment: ${Env.name}'),
-                    trailing: chevron,
-                    onTap: () => context.push(Routes.gallery),
-                  ),
-                ],
-              ],
             ),
           ),
           const _Section('Account'),

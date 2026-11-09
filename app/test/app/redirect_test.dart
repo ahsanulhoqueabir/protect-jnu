@@ -2,29 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:protect_jnu/app/router/app_router.dart';
 import 'package:protect_jnu/app/router/routes.dart';
 
-String? redirect(
-  String location, {
-  String? from,
-  bool restoring = false,
-  bool signedIn = false,
-  bool onboarded = true,
-}) => resolveRedirect(
-  location: location,
-  from: from,
-  isRestoring: restoring,
-  isSignedIn: signedIn,
-  onboardingSeen: onboarded,
-);
+String? redirect(String location, {String? from, bool restoring = false, bool signedIn = false}) =>
+    resolveRedirect(location: location, from: from, isRestoring: restoring, isSignedIn: signedIn);
 
 void main() {
   test('waits on splash while restoring the session', () {
     expect(redirect(Routes.home, restoring: true), Routes.splash);
     expect(redirect(Routes.splash, restoring: true), isNull);
-  });
-
-  test('first launch goes to onboarding', () {
-    expect(redirect(Routes.splash, onboarded: false), Routes.onboarding);
-    expect(redirect(Routes.onboarding, onboarded: false), isNull);
   });
 
   test('signed-out users go to login and keep their deep link', () {

@@ -40,12 +40,16 @@ These were chosen by the agent under that delegation. Each is **revisable**: tel
 | D-022 | Add alert status `cancelled` (student cancels during the 5s window never creates an alert; `cancelled` is for a student ending an active alert) | Enum: active, acknowledged, resolved, cancelled |
 | D-023 | Extra Flutter packages chosen per phase after verifying current versions; HTTP = Dio, prefs = shared_preferences (template); secure storage package for tokens | Confirm each at its phase |
 | D-024 | Lists paginated, 20 rows per page, newest first | |
-| D-026 | Template cleanup: Dart package `protect_jnu`; Android applicationId `com.protectjnu.app` (change before release if you own a different domain); non-Android platform folders deleted; template's `.claude/` rules kept | Done 2026-11-09 except sample-feature removal (needs analyzer) |
+| D-026 | Template cleanup: Dart package `protect_jnu`; Android applicationId `com.protectjnu.app` (change before release if you own a different domain); non-Android platform folders deleted; template's `.claude/` rules kept | Done 2026-11-09. Sample features about, gallery and onboarding removed 2026-11-09 (D-038); `posts` kept as reference |
 | D-034 | Adapt template `profiles` to PRD columns (`full_name`, `student_id`, `phone`, `university_email`, role, verification state) in a Phase 1 schema doc, which still goes to the user for approval | Approval gate kept |
 | D-036 | Versions: Node.js = current LTS line (installed v24.22.1 is acceptable; Next 16 needs a supported Node, verify against `web/docs/nextjs/16.4.3/`). Flutter = latest stable channel whose Dart satisfies the template's `sdk: ^3.13.7`; confirm with `flutter --version` in Phase 0 and pin via `.fvmrc` or doc note if user wants | (verify) |
 | D-037 | OTP email: professional, clean, responsive HTML template (branded header, large code, expiry note, 'ignore if not you' footer), plus plain-text fallback; design previewed to user before use | Q-003 |
 | D-035 | Package manager for `web/`: npm (template has package-lock.json) | |
 | D-032 | Still a verification task (see below) | |
+| D-038 | Phase 0 sample cleanup in `app/`: remove about, gallery and onboarding (and their routes, redirect parameter, settings tiles, storage key, tests); keep `posts` as the reference feature until the first real feature replaces it. `LegalScreen` (terms/privacy placeholder) moved to `features/status/presentation/legal_screen.dart` | User, 2026-11-09 |
+| D-039 | Flutter upgraded 3.47.2 → 3.47.9 (Dart 3.13.7) to satisfy template `sdk: ^3.13.7` (closes D-036 verify for Flutter) | User, 2026-11-09 |
+| D-041 | `web/`: `docs/nextjs/<version>/` is the sole Next.js reference for agents; `agentRules: false` in `web/next.config.ts` stops `next dev` from appending a block to `web/AGENTS.md` that points at `node_modules/next/dist/docs/`; that block was removed | User, 2026-11-09 |
+| D-040 | Known exception to the template's `npm audit` = 0 rule: 13 low/moderate findings via dev tools `shadcn` and `eslint-config-next`; the only fix is a breaking `--force` change. Re-check each phase | User, 2026-11-09 |
 
 ## Open (blocking where noted) — consequences of D-001 (custom auth)
 | ID | Question | Why it matters | Gate |

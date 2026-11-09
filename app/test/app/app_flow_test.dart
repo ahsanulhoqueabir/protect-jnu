@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:protect_jnu/app/app.dart';
 import 'package:protect_jnu/app/router/app_router.dart';
 import 'package:protect_jnu/core/connectivity/connectivity_provider.dart';
@@ -12,6 +11,7 @@ import 'package:protect_jnu/features/auth/data/auth_repository.dart';
 import 'package:protect_jnu/features/auth/domain/user.dart';
 import 'package:protect_jnu/features/posts/data/posts_repository.dart';
 import 'package:protect_jnu/features/posts/domain/post.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _MockAuth extends Mock implements AuthRepository {}
 
@@ -54,12 +54,8 @@ void main() {
 
   GoRouter router(ProviderContainer container) => container.read(routerProvider);
 
-  testWidgets('first launch: onboarding, sign in, home, then sign out', (tester) async {
+  testWidgets('first launch: sign in, home, then sign out', (tester) async {
     await boot(tester, {});
-    expect(find.text('Welcome'), findsOneWidget);
-
-    await tester.tap(find.text('Skip'));
-    await tester.pumpAndSettle();
     expect(find.text('Welcome back'), findsOneWidget);
 
     await tester.enterText(find.byType(TextFormField).at(0), 'ada@example.com');
@@ -79,7 +75,6 @@ void main() {
 
   testWidgets('returning user lands on home and every screen renders', (tester) async {
     final container = await boot(tester, {
-      'onboarding_seen': true,
       'auth_token': 't',
       'user': '{"id":"1","name":"Ada Lovelace","email":"ada@example.com"}',
     });
@@ -89,8 +84,6 @@ void main() {
       ('/profile', 'ada@example.com'),
       ('/profile/edit', 'Save changes'),
       ('/settings', 'Appearance'),
-      ('/settings/about', 'Privacy Policy'),
-      ('/settings/gallery', 'Component gallery'),
       ('/legal/terms', 'Terms of Service'),
       ('/offline', "You're offline"),
       ('/maintenance', 'Back soon'),
@@ -104,7 +97,7 @@ void main() {
   });
 
   testWidgets('register screen fits a phone and keeps confirm password', (tester) async {
-    final container = await boot(tester, {'onboarding_seen': true});
+    final container = await boot(tester, {});
     router(container).go('/register');
     await tester.pumpAndSettle();
 

@@ -22,13 +22,13 @@ lib/
 ├── shared/widgets/        Buttons, form controls, status views, snackbars, dialogs
 └── features/
     ├── auth/              Sign in, register, reset password, session state
-    ├── onboarding/, splash/, profile/, about/, status/, gallery/
+    ├── splash/, profile/, settings/, status/
     ├── posts/             Example feature (reference implementation)
     │   ├── domain/        Models
     │   ├── data/          Repository: talks to the API
     │   ├── posts_providers.dart   State exposed to the UI
     │   └── presentation/  Screens and widgets
-    └── settings/          Theme, sign out, links to About
+    └── settings/          Theme, sign out
 ```
 
 ## The layers

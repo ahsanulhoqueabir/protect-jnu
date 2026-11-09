@@ -54,8 +54,8 @@ Keep the other features: they are the screens most apps need.
 ## 7. Replace the placeholders
 
 - Connect real auth and set `USE_MOCK_AUTH` as needed. See [app-flow.md](../architecture/app-flow.md).
-- Replace the placeholder text in `LegalScreen` (`lib/features/about/presentation/about_screen.dart`). Do this before any release.
-- Rewrite the onboarding pages and replace `BrandMark` with your logo.
+- Replace the placeholder text in `LegalScreen` (`lib/features/status/presentation/legal_screen.dart`). Do this before any release.
+- Replace `BrandMark` with your logo.
 
 ## 8. Reset the version
 

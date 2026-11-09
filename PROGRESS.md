@@ -1,7 +1,7 @@
 # PROGRESS
 
 Last updated: 2026-11-09
-**Current phase:** Phase 7 closed 2026-11-09 by user instruction (verify-phase not run, B-020). Phases 4, 5 and 6 closed the same way. Next: Phase 8 (not started; needs the user's go-ahead)
+**Current phase:** Phase 8 closed 2026-11-09 by user instruction (verify-phase not run, B-021). Phases 4, 5, 6 and 7 closed the same way. Next: Phase 9 (not started; needs the user's go-ahead)
 
 Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]` blocked
 
@@ -16,7 +16,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 5 | Live location + Leaflet map | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-018) | 4 |
 | 6 | Real-time chat | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-019) | 4 |
 | 7 | Photo/video capture + local gallery | Closed 2026-11-09 by user instruction; verify-phase NOT run; phone checks not done (B-020) | 3 (SOS integration: 4) |
-| 8 | Reports + CSV export | Not started | 4 |
+| 8 | Reports + CSV export | Closed 2026-11-09 by user instruction; verify-phase NOT run; browser/CSV/HTTP checks not done (B-021) | 4 |
 | 9 | Full testing, bug fixing, demo/report prep | Not started | 1–8 |
 
 ## Planning tasks (this session)
@@ -47,6 +47,18 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - PASS env: Brevo names in `.env.example`; user states real values added to `.env.local` (values not read).
 - NOT DONE: app run on emulator/device. `flutter devices` fails: adb protocol fault, port 5037 held by Code.exe; same error on port 5038; no Android emulator or AVD installed (`D:\Flutter\AndroidSDK\emulator` missing). Brevo sender verification status not confirmed by agent (Q-002).
 - Hosting Q-005: Vercel (recorded).
+
+## Phase 8 tasks
+Status: CLOSED 2026-11-09 by user instruction (no remaining implementation tasks). `verify-phase` was NOT run; the page, chart and CSV download were not checked in a browser (B-021). Spec: `docs/phases/phase-8-reports.md`. Prerequisite Phase 4 closed. Answers 2026-11-09 (D-076): Asia/Dhaka; period = acknowledged_at else resolved_at; shadcn charts (Recharts); summary CSV; one read-only RPC.
+- [x] 1. Metric definitions written into the phase doc
+- [x] 2. 0017 run by the user; verified by MCP: `support_report(integer)` exists, security invoker, anon cannot execute, authenticated can
+- [x] 3. `ReportService` + routes `GET /api/admin/reports` and `/export` (`withAdmin`, user-JWT client). The routes themselves were NOT called over HTTP
+- [x] 4. (built; browser check carried as B-021) `/admin/reports` page: year filter, shadcn chart (recharts ^3.8.0), table, nav link. Builds; NOT browser-checked
+- [x] 5. CSV: `lib/csv.ts`, `tests/unit/csv.test.ts` 4 passed
+- [x] 6. Seed test in a rolled-back MCP transaction (alerts table back to 0 rows): one student with 3 acknowledged alerts (Mar 10, Mar 20, Mar 31 19:00 UTC = Apr 1 01:00 Dhaka), 1 resolved-only (May 5), 1 cancelled. Result matched the expected numbers: Mar 2 alerts/1 student, Apr 1/1 (month-boundary case in Dhaka time), May 1/1, cancelled not counted, other months 0. Same student with several alerts = 1 supported, N alerts. As a student JWT the function raises 42501; year 1999 raises 22023
+- Evidence: `npx tsc --noEmit` 0 errors, lint clean, `npm run build` OK (reports routes listed), `npm test` 92 passed, `npm audit` 13 (2 low, 11 moderate) = unchanged accepted D-040
+- NOT done: browser check of page/chart/CSV download with the admin account; HTTP check of non-admin 401/403 on the routes (the 42501 DB check and `withAdmin` from Phase 2 cover it); CSV opened in a spreadsheet
+- verify-phase not yet run; waiting for the user's decision on closing
 
 ## Phase 7 tasks
 Status: CLOSED 2026-11-09 by user instruction ("close the phase"). `verify-phase` was NOT run; nothing was run on the phone, so the completion criteria (capture + gallery working, no upload verified, SOS/location unaffected) are met only by code and automated tests (B-020). Spec: `docs/phases/phase-7-media.md`. Prerequisites: Phase 3 done, Phase 4 closed, Phase 6 closed (D-073). Answers 2026-11-09 (D-074): app-private storage; video 60 s medium quality; delete + alert-id tag in a local index; official `camera` + `video_player`.
@@ -227,6 +239,7 @@ Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-1-database-rls
 | B-018 | Phase 5 closed without verify-phase and without the manual checks: foreground notification, 10 s sending, screen-off 10+ min, airplane-mode queue (real SQLite class untested), stop after resolve/cancel on the phone; live map, attribution and tile-failure banner in a browser | User | Phase 5 sign-off |
 | B-019 | Phase 6 closed without verify-phase and without manual checks: chat both ways on phone + dashboard, unread badge/counts, read-only after resolve, failed-send retry offline, Dart repository against the real DB (Realtime stream with order/limit, insert, mark read), supabase_flutter resubscribe after a socket drop; one unexplained Realtime test flake (1 of 6) | User | Phase 6 sign-off |
 | B-020 | Phase 7 closed without verify-phase and without phone checks: capture photo/video, files persist after restart, permission-denied messages (plugin error codes matched by substring, unverified), video playback, delete, location rows continue during video capture, network inspection shows no upload. Also: first debug APK build failed once for an uncaptured reason, re-run succeeded | User | Phase 7 sign-off |
+| B-021 | Phase 8 closed without verify-phase and without manual checks: `/admin/reports` in a browser with the admin account (year filter, chart, table), CSV download opened in a spreadsheet, HTTP 401/403 for non-admin on `/api/admin/reports` and `/export` | User | Phase 8 sign-off |
 | B-006 | RESOLVED 2026-11-09: adb uses port 5099, licenses accepted, phone connected. Was: (deferred to Phase 3, D-042) `flutter doctor`: Android licenses not accepted; adb fails because port 5037 is held by Code.exe (PID 24392), which answers HTTP. Blocks emulator/device smoke test | User | Phase 0 |
 
 ## Open questions (full list: docs/07-open-questions.md)
@@ -244,6 +257,8 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-025 | `app/` based on template github.com/ahsanulhoqueabir/flutter | User |
 | 2026-11-09 | D-042 | Close Phase 0 with device smoke test deferred to Phase 3 | User |
 | 2026-11-09 | D-053..D-056 | Phase 3 gating answers (recorded only, Phase 3 not started): minimal neutral theme #1F3A5F; flutter_secure_storage + supabase_flutter (versions to verify); local dev server as backend URL; physical Android phone for tests | User |
+| 2026-11-09 | D-077 | Phase 8 closed at the user's instruction without running verify-phase; manual checks carried as B-021 | User |
+| 2026-11-09 | D-076 | Phase 8 answers: Asia/Dhaka; period = acknowledged_at else resolved_at; shadcn charts (Recharts); summary CSV; one read-only RPC | User |
 | 2026-11-09 | D-075 | Phase 7 closed at the user's instruction without running verify-phase; manual phone checks carried as B-020 | User |
 | 2026-11-09 | D-074 | Phase 7 answers: app-private storage; video 60 s medium; delete + alert-id tag (local index); official camera + video_player | User |
 | 2026-11-09 | D-073 | Phase 6 closed at the user's instruction without running verify-phase; manual checks carried as B-019 | User |
@@ -268,6 +283,7 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-008 | Flutter: Riverpod + go_router, feature-first | User |
 
 ## Change log
+- 2026-11-09: Phase 8 built and closed on user instruction: migration 0017 (`support_report` RPC, run manually), admin reports API + export, `/admin/reports` page with shadcn chart, CSV helper with formula guard; api-contract 6c.
 - 2026-11-09: Phase 4 built and closed on user instruction: migrations 0013 (one open alert per student, admin id columns, old test alerts deleted) and 0014 (pin admin ids against client writes); admin alerts/users API, live dashboard, detail, history, users pages; Flutter SOS (hold, cancel window, location, active alert screen). Test accounts recreated (admin + student).
 - 2026-11-09: Phase 0 work: web installs/builds; app on Flutter 3.47.9 with samples removed and checks passing; Supabase project confirmed disposable dev.
 - 2026-11-09: User answers recorded (Supabase/Brevo/Vercel ready, no deadline, student ID format, license OK).

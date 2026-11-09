@@ -306,6 +306,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      support_report: {
+        Args: { p_year: number }
+        Returns: {
+          year: number
+          month: number
+          alerts_handled: number
+          students_supported: number
+        }[]
+      }
       chat_conversations: {
         Args: never
         Returns: {

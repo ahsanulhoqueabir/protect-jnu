@@ -30,6 +30,7 @@ export default async function AdminLayout({
           <a href="/admin/conversations" className="hover:underline">Conversations</a>
           <a href="/admin/history" className="hover:underline">History</a>
           <a href="/admin/users" className="hover:underline">Users</a>
+          <a href="/admin/reports" className="hover:underline">Reports</a>
         </nav>
         <div className="flex items-center gap-4 text-sm">
           <span className="opacity-80">{auth.data.email}</span>

@@ -114,4 +114,14 @@ Same auth as above. The service calls Supabase AS the admin (their access token)
 
 Rules: a thread accepts messages only while the alert is active or acknowledged; history stays readable. A user can mark only the other party's messages read, and only `read_at`.
 
-Rules: only `active -> acknowledged` and `acknowledged -> resolved`. The update matches only while the row is in the expected state, so concurrent admins cannot both win and a resolved alert cannot be reopened. The acting admin id is stored in `acknowledged_by` / `resolved_by` (0013); timestamps come from the DB trigger.
+### 6c. Admin reports API (Phase 8, D-076)
+Same auth as above. The service calls the SQL function `support_report(p_year)` AS the admin (migration 0017); a non-admin gets `not_admin` / 42501.
+
+| Route | Purpose | Success | Errors |
+|---|---|---|---|
+| GET `/api/admin/reports[?year=YYYY]` | 12 months of the year (default: current year in Asia/Dhaka) | 200 `data: { year, months: [{ year, month, alerts_handled, students_supported }] }` | 401, 403, 422 `validation_failed` (year not 2000-2100) |
+| GET `/api/admin/reports/export[?year=YYYY]` | same figures as CSV (`year,month,alerts_handled,students_supported`), `Content-Disposition: attachment; filename="support-report-YYYY.csv"` | 200 `text/csv` | 401, 403, 422 |
+
+Rules: period = month (Asia/Dhaka) of `coalesce(acknowledged_at, resolved_at)`; students counted once per month; alerts neither acknowledged nor resolved are not counted. CSV cells that start with `= + - @` tab or CR are prefixed with `'`.
+
+Rules (alerts): only `active -> acknowledged` and `acknowledged -> resolved`. The update matches only while the row is in the expected state, so concurrent admins cannot both win and a resolved alert cannot be reopened. The acting admin id is stored in `acknowledged_by` / `resolved_by` (0013); timestamps come from the DB trigger.

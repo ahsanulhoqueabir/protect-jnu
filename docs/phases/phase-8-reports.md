@@ -9,6 +9,14 @@ FR-REP-1…3; PRD §5.6.
 ## Prerequisites
 Phase 4 complete (alerts with acknowledged/resolved timestamps). Ask: timezone for month boundaries (e.g. Asia/Dhaka?), which timestamp assigns an alert to a period (acknowledged vs resolved vs started), CSV columns, chart library (shadcn charts/Recharts — confirm).
 
+## Metric definitions (D-076)
+- Timezone: Asia/Dhaka for all month boundaries.
+- Period of an alert: month of `coalesce(acknowledged_at, resolved_at)`. Alerts with neither (active, or cancelled before handling) are not counted.
+- Alerts handled: number of such alerts in the month.
+- Students supported: distinct `user_id` among them, once per month (the same student in two months counts in both).
+- Source: RPC `support_report(p_year)` (`web/schemas/0017_support_report.sql`), security invoker, admin check inside, always 12 rows.
+- CSV columns: year, month, alerts_handled, students_supported (cells guarded against formula injection).
+
 ## Components
 Web: `/admin/reports` page, filters (month, year), bar chart (monthly), summary cards, CSV export (server route, admin-authorized).
 
@@ -33,10 +41,10 @@ Reads `alerts` (+ `profiles`). Possible view/RPC — requires approval and a mig
 - CSV opens in spreadsheet; non-admin gets 401/403.
 
 ## Completion criteria
-- [ ] Numbers match SQL verification
-- [ ] Filters, chart, CSV work
-- [ ] Admin-only enforced
-- [ ] PROGRESS updated; user confirmed
+- [x] Numbers match SQL verification (rolled-back MCP seed test, 2026-11-09)
+- [~] Filters, chart, CSV work: built and compiled, NOT checked in a browser or spreadsheet (B-021)
+- [x] Admin-only enforced: SQL function raises 42501 for students (tested); routes use `withAdmin`; routes not called over HTTP
+- [x] PROGRESS updated; closed 2026-11-09 by user instruction, verify-phase not run
 
 ## Out of scope
 PDF reports, scheduled emails.

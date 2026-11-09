@@ -13,8 +13,8 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 2 | OTP lifecycle + Brevo integration (server) | Done 2026-11-09 (user-confirmed; both real emails looked good) | 1 |
 | 3 | Auth flows: Flutter + Admin web | Done 2026-11-09 (user-confirmed after manual phone run) | 2 |
 | 4 | SOS flow + live alerts list | Closed 2026-11-09 by user instruction; manual phone/browser checks carried (B-015..B-017) | 3 |
-| 5 | Live location + Leaflet map | In progress (started 2026-11-09) | 4 |
-| 6 | Real-time chat | Not started | 4 |
+| 5 | Live location + Leaflet map | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-018) | 4 |
+| 6 | Real-time chat | In progress (started 2026-11-09; waiting on gating answers) | 4 |
 | 7 | Photo/video capture + local gallery | Not started | 3 (SOS integration: 4) |
 | 8 | Reports + CSV export | Not started | 4 |
 | 9 | Full testing, bug fixing, demo/report prep | Not started | 1–8 |
@@ -48,8 +48,18 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - NOT DONE: app run on emulator/device. `flutter devices` fails: adb protocol fault, port 5037 held by Code.exe; same error on port 5038; no Android emulator or AVD installed (`D:\Flutter\AndroidSDK\emulator` missing). Brevo sender verification status not confirmed by agent (Q-002).
 - Hosting Q-005: Vercel (recorded).
 
+## Phase 6 tasks
+Status: IN PROGRESS (started 2026-11-09). Spec: `docs/phases/phase-6-chat.md`. Prerequisites: Phase 4 closed by user (D-065), Phase 5 closed (D-071). D-021 already answered. Gating questions answered 2026-11-09 (D-072): 1000 chars; read-only after resolve/cancel; in-app-only notice; offline = failed + tap to retry; one RPC/view for unread + last message.
+- [ ] 1. Confirm `messages` schema and RLS (student own alert only; admin any)
+- [ ] 2. Send from both sides; length/non-empty validation server-side or by constraint
+- [ ] 3. Realtime inserts filtered by `alert_id`; history by `sent_at`; dedupe optimistic inserts
+- [ ] 4. Mark read (`read_at`), RLS design with user
+- [ ] 5. Conversations list: last message + unread count for admins, Realtime
+- [ ] 6. Reconnect: refetch since last seen
+- [ ] 7. Tests: isolation (2 students + admin), latency, unread counts, RLS matrix for messages
+
 ## Phase 5 tasks
-Status: IN PROGRESS (started 2026-11-09). Spec: `docs/phases/phase-5-location-map.md`. Answers: D-066..D-068 (10 s interval, trail 20 points, notification text, SQLite queue 500, plain Leaflet + OSM, Redmi only).
+Status: CLOSED 2026-11-09 by user instruction ("no need to run the verify phase test"). `verify-phase` was NOT run. Spec: `docs/phases/phase-5-location-map.md`. Answers: D-066..D-068 (10 s interval, trail 20 points, notification text, SQLite queue 500, plain Leaflet + OSM, Redmi only).
 - [x] 1. Manifest: added FOREGROUND_SERVICE, FOREGROUND_SERVICE_LOCATION, POST_NOTIFICATIONS to the main manifest. Verified in the installed plugin source (geolocator_android 5.2.1): it already declares `GeolocatorLocationService` with `foregroundServiceType="location"` and `ForegroundNotificationConfig` (title, text, channel name, icon, setOngoing, wake lock) exists, so NO new foreground-service package is needed (proposal, revisable). No ACCESS_BACKGROUND_LOCATION: the service starts while the app is in the foreground. Android-14 permission names and the notification runtime permission still to be checked against developer.android.com (not fetched yet); not yet built or run
 - [~] 2. Foreground service = geolocator `getPositionStream` + `ForegroundNotificationConfig` (title/text per D-066), started by `liveLocationControllerProvider` while the alert is open. Code done; NOT run on the phone (notification, permission dialogs untested)
 - [~] 3. 10 s `intervalDuration`, device `recorded_at`, batch insert under RLS (`location_uploader.dart`). Unit-tested with fakes; real insert not yet run
@@ -197,6 +207,7 @@ Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-1-database-rls
 | B-015 | Integration tests interfere when files run in parallel (shared `itest-` cleanup in `tests/integration/helpers.ts`), so `npm run test:integration` is flaky; suspected, not confirmed. Fix before relying on the suite in Phase 9 (scope each file's cleanup to its own users or run serially) | Agent | Phase 9 |
 | B-016 | `auth-flows.test.ts > register > rejects a taken email and a taken student ID` failed once in a serial run (passed in Phase 2). Not investigated | Agent | Phase 9 |
 | B-017 | Phase 4 manual checks not done: dashboard in a browser with the admin account, SOS on the physical phone, real latency. User will report results | User | Phase 4 sign-off |
+| B-018 | Phase 5 closed without verify-phase and without the manual checks: foreground notification, 10 s sending, screen-off 10+ min, airplane-mode queue (real SQLite class untested), stop after resolve/cancel on the phone; live map, attribution and tile-failure banner in a browser | User | Phase 5 sign-off |
 | B-006 | RESOLVED 2026-11-09: adb uses port 5099, licenses accepted, phone connected. Was: (deferred to Phase 3, D-042) `flutter doctor`: Android licenses not accepted; adb fails because port 5037 is held by Code.exe (PID 24392), which answers HTTP. Blocks emulator/device smoke test | User | Phase 0 |
 
 ## Open questions (full list: docs/07-open-questions.md)
@@ -214,6 +225,8 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-025 | `app/` based on template github.com/ahsanulhoqueabir/flutter | User |
 | 2026-11-09 | D-042 | Close Phase 0 with device smoke test deferred to Phase 3 | User |
 | 2026-11-09 | D-053..D-056 | Phase 3 gating answers (recorded only, Phase 3 not started): minimal neutral theme #1F3A5F; flutter_secure_storage + supabase_flutter (versions to verify); local dev server as backend URL; physical Android phone for tests | User |
+| 2026-11-09 | D-072 | Phase 6 answers: 1000-char limit; read-only after resolve/cancel; in-app-only student notice; offline = failed + retry; one RPC/view for unread + last message | User |
+| 2026-11-09 | D-071 | Phase 5 closed at the user's instruction without running verify-phase; manual checks carried as B-018 | User |
 | 2026-11-09 | D-065 | Phase 4 closed at the user's instruction before the manual phone/browser checks and with the integration suite not fully green; both recorded as carried (B-015..B-017) | User |
 | 2026-11-09 | D-063 | Migration 0013: delete old test alerts, admin id columns, one-open-alert unique index (user runs manually) | User |
 | 2026-11-09 | D-059..D-062 | Phase 4 answers: SOS without location if denied; one open alert per student; student direct insert + admin server API; beep + toast, card fields | User |

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'app_spacing.dart';
 
-/// Central theme. Change [seed] to rebrand; read colors via
+/// Central theme. Primary colour #1F3A5F (D-053); change [seed] to rebrand; read colors via
 /// `context.colors` (or `Theme.of(context).colorScheme`), never hard-code them.
 abstract final class AppTheme {
-  static const seed = Color(0xFF4F46E5);
+  static const seed = Color(0xFF1F3A5F);
 
   /// Semantic colors not covered by [ColorScheme].
   static const success = Color(0xFF16A34A);

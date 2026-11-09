@@ -11,6 +11,12 @@ import 'interceptors.dart';
 /// the user out, which keeps `core` from importing feature code.
 final sessionExpiredProvider = Provider<void Function()>((ref) => () {});
 
+/// Refreshes the session after a 401. Overridden in `main.dart` (auth lives in a feature).
+final tokenRefresherProvider = Provider<TokenRefresher>(
+  (ref) =>
+      () async => false,
+);
+
 /// The one configured [Dio] instance for the whole app.
 final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
@@ -24,7 +30,9 @@ final dioProvider = Provider<Dio>((ref) {
 
   dio.interceptors.add(
     AuthInterceptor(
-      () => ref.read(localStorageProvider).authToken,
+      dio,
+      () => ref.read(tokenStoreProvider).accessToken,
+      refresh: () => ref.read(tokenRefresherProvider)(),
       onSessionExpired: () => ref.read(sessionExpiredProvider)(),
     ),
   );

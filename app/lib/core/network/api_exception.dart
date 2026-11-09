@@ -30,7 +30,18 @@ sealed class ApiException implements Exception {
 
   static ApiException _fromResponse(DioException e) {
     final data = e.response?.data;
-    return switch (e.response?.statusCode ?? 0) {
+    final status = e.response?.statusCode ?? 0;
+    // Our backend envelope: {success:false, error, code, data?}. A machine code wins.
+    if (data is Map && data['code'] is String) {
+      final details = data['data'];
+      return CodedApiException(
+        statusCode: status,
+        code: data['code'] as String,
+        message: _extractMessage(data, 'Something went wrong. Please try again.'),
+        details: details is Map ? Map<String, dynamic>.from(details) : const {},
+      );
+    }
+    return switch (status) {
       // No token sent means a login attempt failed, not an expired session.
       401 when !e.requestOptions.headers.containsKey('Authorization') => UnauthorizedException(
         _extractMessage(data, 'Incorrect email or password'),
@@ -52,6 +63,7 @@ sealed class ApiException implements Exception {
   }
 
   static String _extractMessage(Object? data, String fallback) {
+    if (data is Map && data['error'] is String) return data['error'] as String;
     if (data is Map && data['message'] is String) return data['message'] as String;
     return fallback;
   }
@@ -71,6 +83,24 @@ sealed class ApiException implements Exception {
 
   @override
   String toString() => message;
+}
+
+/// A backend error that carries a machine-readable [code] (docs/api-contract.md), e.g.
+/// `otp_invalid` with `details['attempts_remaining']`, or `email_not_verified`.
+final class CodedApiException extends ApiException {
+  const CodedApiException({
+    required this.statusCode,
+    required this.code,
+    required String message,
+    this.details = const {},
+  }) : super(message);
+
+  final int statusCode;
+  final String code;
+  final Map<String, dynamic> details;
+
+  int? get retryAfterSeconds => details['retry_after_seconds'] as int?;
+  int? get attemptsRemaining => details['attempts_remaining'] as int?;
 }
 
 final class NetworkException extends ApiException {

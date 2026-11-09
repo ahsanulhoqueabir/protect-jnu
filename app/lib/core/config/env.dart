@@ -5,15 +5,14 @@
 abstract final class Env {
   static const String name = String.fromEnvironment('APP_ENV', defaultValue: 'dev');
   static const String appName = String.fromEnvironment('APP_NAME', defaultValue: 'Protect JnU');
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://jsonplaceholder.typicode.com',
-  );
-  static const bool enableHttpLogs = bool.fromEnvironment('ENABLE_HTTP_LOGS');
 
-  /// Use the in-memory auth backend instead of real `/auth/*` endpoints.
-  /// Defaults to false so a misconfigured build can never accept fake logins.
-  static const bool useMockAuth = bool.fromEnvironment('USE_MOCK_AUTH');
+  /// Backend (`web/` Next.js API). Dev: `http://localhost:3000` on a USB phone via `adb reverse`.
+  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+
+  /// Supabase publishable (public by design) key. Never put the secret/service-role key here.
+  static const String supabasePublishableKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  static const bool enableHttpLogs = bool.fromEnvironment('ENABLE_HTTP_LOGS');
 
   static bool get isProd => name == 'prod';
 }

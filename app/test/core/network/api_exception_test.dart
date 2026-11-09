@@ -47,4 +47,26 @@ void main() {
   test('non-JSON error bodies fall back to a safe message', () {
     expect(fromStatus(500, data: '<html>').message, 'Something went wrong on our side');
   });
+
+  test('backend envelope with a code becomes CodedApiException with details', () {
+    final e = ApiException.fromDio(
+      DioException(
+        requestOptions: RequestOptions(path: '/x'),
+        type: DioExceptionType.badResponse,
+        response: Response(
+          requestOptions: RequestOptions(path: '/x'),
+          statusCode: 400,
+          data: {
+            'success': false,
+            'error': 'Wrong code',
+            'code': 'otp_invalid',
+            'data': {'attempts_remaining': 4},
+          },
+        ),
+      ),
+    );
+    expect(e, isA<CodedApiException>());
+    final coded = e as CodedApiException;
+    expect((coded.code, coded.message, coded.attemptsRemaining), ('otp_invalid', 'Wrong code', 4));
+  });
 }

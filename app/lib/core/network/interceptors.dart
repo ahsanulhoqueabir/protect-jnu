@@ -2,22 +2,24 @@ import 'package:dio/dio.dart';
 
 import '../utils/logger.dart';
 
-/// Adds `Authorization: Bearer <token>` and reports when that token is rejected.
+/// Refreshes the stored session. Returns true when new tokens are stored, false when the
+/// server rejected the refresh token. Throws on network trouble (the session is kept).
+typedef TokenRefresher = Future<bool> Function();
+
+/// Adds `Authorization: Bearer <token>`. On 401 it refreshes the session once and replays the
+/// request; if that fails (or the replay is still 401) the user is signed out.
 class AuthInterceptor extends Interceptor {
-  AuthInterceptor(this._readToken, {required this.onSessionExpired});
+  AuthInterceptor(
+    this._dio,
+    this._readToken, {
+    required this.refresh,
+    required this.onSessionExpired,
+  });
 
+  final Dio _dio;
   final String? Function() _readToken;
+  final TokenRefresher refresh;
   final void Function() onSessionExpired;
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    // Compare tokens so a late 401 from an old session can't sign out a new one.
-    final sent = err.requestOptions.headers['Authorization'];
-    if (err.response?.statusCode == 401 && sent != null && sent == 'Bearer ${_readToken()}') {
-      onSessionExpired();
-    }
-    handler.next(err);
-  }
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -26,6 +28,42 @@ class AuthInterceptor extends Interceptor {
       options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
+  }
+
+  @override
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+    final request = err.requestOptions;
+    final sent = request.headers['Authorization'];
+    // Only a rejected Bearer token counts; a failed login carries no Authorization header.
+    if (err.response?.statusCode != 401 || sent == null) return handler.next(err);
+
+    if (request.extra['retried'] == true) {
+      onSessionExpired();
+      return handler.next(err);
+    }
+
+    // A concurrent request may already have refreshed: then just replay with the new token.
+    final current = _readToken();
+    var refreshed = current != null && sent != 'Bearer $current';
+    if (!refreshed) {
+      try {
+        refreshed = await refresh();
+      } on Object {
+        return handler.next(err); // Offline or server down: keep the session.
+      }
+    }
+    if (!refreshed) {
+      onSessionExpired();
+      return handler.next(err);
+    }
+
+    request.extra['retried'] = true;
+    request.headers['Authorization'] = 'Bearer ${_readToken()}';
+    try {
+      handler.resolve(await _dio.fetch<dynamic>(request));
+    } on DioException catch (e) {
+      handler.next(e);
+    }
   }
 }
 

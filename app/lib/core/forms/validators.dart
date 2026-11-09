@@ -27,6 +27,38 @@ abstract final class Validators {
   static Validator required([String message = 'This field is required']) =>
       (value) => (value == null || value.trim().isEmpty) ? message : null;
 
+  /// `name@jnu.ac.bd` or `name@dept.jnu.ac.bd` (D-052). Same rule as the server and the DB.
+  static final _universityEmailRegex = RegExp(
+    r'^[^@\s]+@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)*jnu\.ac\.bd$',
+  );
+
+  /// Student ID `B` + 9 digits (D-020); case-insensitive here, uppercased before sending.
+  static final _studentIdRegex = RegExp(r'^[bB]\d{9}$');
+
+  /// Bangladesh mobile as enforced by the DB: optional +880, then 10-11 digits.
+  static final _bdPhoneRegex = RegExp(r'^(\+880)?[0-9]{10,11}$');
+
+  static Validator universityEmail([
+    String message = 'Use your Jagannath University email (ending in jnu.ac.bd)',
+  ]) => _optional((v) => _universityEmailRegex.hasMatch(v.toLowerCase()) ? null : message);
+
+  static Validator studentId([String message = 'Student ID looks like B210305040']) =>
+      _optional((v) => _studentIdRegex.hasMatch(v) ? null : message);
+
+  static Validator bdPhone([String message = 'Use 01XXXXXXXXX or +8801XXXXXXXXX']) =>
+      _optional((v) => _bdPhoneRegex.hasMatch(v) ? null : message);
+
+  /// 8-64 characters, no composition rules (D-015). The server also rejects very common
+  /// passwords and answers with a message that is shown as-is.
+  static Validator newPassword() => _optional((v) {
+    if (v.length < 8) return 'Use at least 8 characters';
+    if (v.length > 64) return 'Use at most 64 characters';
+    return null;
+  });
+
+  static Validator otpCode([String message = 'Enter the 6-digit code']) =>
+      _optional((v) => RegExp(r'^\d{6}$').hasMatch(v) ? null : message);
+
   static Validator email([String message = 'Enter a valid email address']) =>
       _optional((v) => _emailRegex.hasMatch(v) ? null : message);
 

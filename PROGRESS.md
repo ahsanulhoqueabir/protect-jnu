@@ -1,7 +1,7 @@
 # PROGRESS
 
 Last updated: 2026-11-09
-**Current phase:** Phase 3 IN PROGRESS (started 2026-11-09 on the user's go-ahead). Order: web admin pages first, then Flutter once the phone prerequisites (B-006) are fixed by the user
+**Current phase:** Phase 3 DONE 2026-11-09 (user checked every flow on the phone and said OK). Phase 4 NOT STARTED: waiting for the user's explicit go-ahead
 
 Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]` blocked
 
@@ -11,7 +11,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 0 | Prerequisites, accounts, scaffolding | Done 2026-11-09 (user-confirmed; device run deferred, D-042) | — |
 | 1 | Supabase schema, RLS, domain enforcement, custom auth data model | Done 2026-11-09 (user-confirmed; open items B-008, B-009, B-012 carried) | 0 |
 | 2 | OTP lifecycle + Brevo integration (server) | Done 2026-11-09 (user-confirmed; both real emails looked good) | 1 |
-| 3 | Auth flows: Flutter + Admin web | In progress (started 2026-11-09) | 2 |
+| 3 | Auth flows: Flutter + Admin web | Done 2026-11-09 (user-confirmed after manual phone run) | 2 |
 | 4 | SOS flow + live alerts list | Not started | 3 |
 | 5 | Live location + Leaflet map | Not started | 4 |
 | 6 | Real-time chat | Not started | 4 |
@@ -49,21 +49,32 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - Hosting Q-005: Vercel (recorded).
 
 ## Phase 3 tasks
-Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-3-auth-flows.md`. Prerequisite Phase 2 done and user-confirmed. Answers 2026-11-09: contacts = name + phone only; phone format = the existing DB checks; web first.
+Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-3-auth-flows.md`. Prerequisite Phase 2 done and user-confirmed. Answers 2026-11-09: contacts = name + phone only; phone format = the existing DB checks; web first.
 Web
 - [x] W1. Next 16 docs read (`16-proxy.md`, authentication guide cookie examples): `proxy.ts` is an optimistic check only; real check in the layout
 - [x] W2. Admin login `/login` -> `POST /api/admin/session` sets httpOnly, SameSite=Strict (Secure in production) cookies `pj_access` / `pj_refresh`; tokens not in the body. Template localStorage store, axios client, signup page and initializer deleted (D-033)
 - [x] W3. `/forgot-password` and `/reset-password` pages call the approved `/api/auth/*` endpoints with the shared Zod schemas
 - [x] W4. `proxy.ts` (matcher `/admin`) + `app/admin/layout.tsx` validates the token with Supabase and requires role admin on every request; expired access cookie goes through `GET /api/admin/session/refresh`; `DELETE /api/admin/session` revokes and clears
 - [x] W5. Evidence 2026-11-09: `tests/integration/admin-session.test.ts` 6 passed against the real dev project (student 403 and no cookies; admin gets httpOnly+strict cookies, tokens absent from body, cookie token authenticates as admin; refresh rotates cookie and rejects open redirect `//evil.com`; bad refresh -> /login; logout clears; proxy: no cookie -> /login, refresh only -> refresh route, access -> pass). `npm test` 81 passed; `npx tsc --noEmit` 0 errors; `npm run lint` clean; `npm run build` OK. Dev server: /login, /forgot-password, /reset-password 200; /admin and / without cookie 307 -> /login. 0 leftover test users. NOT yet done: manual browser run with a real admin account and a real reset email
-Flutter (after B-006 is fixed by the user)
-- [ ] F1. Verify and add packages: flutter_secure_storage, supabase_flutter (D-054)
-- [ ] F2. API client from `api-contract.md`; base URL via build config; debug cleartext exception (D-055)
-- [ ] F3. Sign up, OTP (6 inputs, states, 60 s resend), login/logout, session persistence, splash routing
-- [ ] F4. Forgot/reset password screens
-- [ ] F5. Emergency contacts (2-3, name + phone) and Profile
-- [ ] F6. go_router guards: unauthenticated, unverified, no contacts
-- [ ] F7. Unit/widget tests, then manual device run
+Flutter
+- [x] F1. Packages verified from pub.dev and added: `flutter_secure_storage ^11.2.0`, `supabase_flutter ^2.18.3` (D-054); dev-only `fake_async` for countdown tests. `Supabase.initialize(accessToken: ...)` confirmed in the package source (supabase_flutter-2.18.3 `lib/src/supabase.dart`); `anonKey` is deprecated so `publishableKey` is used
+- [x] F2. API client from `api-contract.md`: `ApiAuthRepository`; `CodedApiException` reads the `{error, code, data}` envelope; `AuthInterceptor` refreshes once on 401 and replays, signs out only when the refresh token is rejected (network trouble keeps the session). `config/*.json` hold backend URL and Supabase URL and publishable key (no secrets). Dev backend: `http://localhost:3000` through `adb reverse tcp:3000 tcp:3000`; debug-only cleartext in `android/app/src/debug/AndroidManifest.xml` (D-055). `INTERNET` permission was missing from the main manifest and is now added
+- [x] F3. Sign up (name, student ID, university email, password, confirm, terms), OTP screen (6 boxes, states sent/invalid/expired/attempts exceeded/rate limited/verified, 60 s countdown, resend disabled while counting), login and logout, session in `flutter_secure_storage`, splash restore
+- [x] F4. Forgot-password and reset-password screens
+- [x] F5. Emergency contacts (name + phone, 2 to 3, delete) over Supabase RLS, and Profile (student details, contact count, sign out)
+- [x] F6. Guards in `resolveRedirect`: signed out -> login with `from`; unverified login -> OTP screen (no session issued); fewer than 2 contacts -> held on the contacts screen
+- [x] F7. Evidence: `flutter analyze` 0 issues; `flutter test` 54 passed (redirect rules incl. contacts gate, OTP state machine, interceptor refresh/replay/sign-out/no-loop, validators mirroring server rules, coded errors, token store, full-app flows on a 360x700 phone: sign in -> forced contact setup -> home, unverified -> OTP, restored session, sign out). Manual run on the physical phone (Redmi 21121119SG, Android 11) 2026-11-09: user reports every flow checked and OK (sign up, email code, contacts, restart keeps session, sign out/in, password reset). MCP check afterwards: new account `b210305040@cse.jnu.ac.bd` (student ID B210305041), role user, `email_verified_at` set, 2 contacts, 0 live OTP codes
+- Not independently re-run by the agent: wrong-OTP x5 and expired-code on the phone (covered by the user's report and by the server integration tests from Phase 2); student A vs B RLS on contacts (covered by the Phase 1 matrix, 70/70); admin login in a browser with a real admin account
+- Changes beyond the plan: removed the template `posts` sample feature and the edit-profile screen (they depended on removed routes; the PRD has no profile edit); added a debug-only phone setup note below
+- Phone setup learned: adb must use port 5099 (`ANDROID_ADB_SERVER_PORT=5099`) because VS Code holds 5037 (B-006 resolved this way); Android licenses accepted; Xiaomi needed "Install via USB" enabled. First Gradle build took about 18 minutes
+
+### Phase 3 verify-phase run (2026-11-09)
+- PASS all listed screens work against the real backend (user manual run + agent DB check).
+- PASS unverified user cannot reach protected screens (test + app flow; server also issues no session).
+- PASS admin guard: integration tests (student 403 and no cookies, admin cookies httpOnly+strict, proxy, refresh, logout); browser run with a real admin not done by the agent.
+- PASS contacts flow: 2 rows saved through RLS for the new account; admin read of contacts is allowed by the existing policy (matrix) and gets its UI in Phase 4.
+- PASS secrets: only the Supabase publishable key and URL are in `app/config`; tokens only in secure storage; no token or code logged (`AuthTokens.toString` is redacted).
+- OPEN carried: B-008 (leaked-password protection, user), B-009, B-011. Test account `b210305040@cse.jnu.ac.bd` from the phone run still exists in the dev project; delete it when the user wants.
 
 ## Phase 2 tasks
 Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-2-otp-brevo.md`. Prerequisite Phase 1 done and user-confirmed. `web/.env.local` has all 9 variables filled (names checked, values not read), including BREVO_API_KEY / BREVO_SENDER_EMAIL / BREVO_SENDER_NAME.
@@ -138,7 +149,7 @@ Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-1-database-rls
 | B-012 | `web/.env.local` `JWT_SECRET_KEY` equals the placeholder committed in `web/.env.example` (compared by equality only, value not printed), so it is a publicly known value. Template `jose` JWT is slated for removal in Phase 2 (D-004/D-005); until then generate a random secret (e.g. 32+ random bytes) and put it only in `.env.local`. `SUPABASE_SECRET_KEY` and the two other Supabase values in `.env.local` differ from the example (good) | User | Phase 2 |
 | B-011 | Unexplained test data: 30 cancelled alerts (one user, 07:55-07:57Z) and 2 active alerts (08:02Z, 08:04Z) exist, created today before the RLS matrix; not created by the agent's migrations or the matrix (rolled back). Probably the user's own testing; confirm or ignore | User | none |
 | B-009 | O1 (docs/phases/phase-1-schema.md 2.7): earlier migrations granted broad DML on auth.* tables to `authenticator` and `service_role`, probably unnecessary. Decide: keep or revoke | User | Phase 1 |
-| B-006 | (deferred to Phase 3, D-042) `flutter doctor`: Android licenses not accepted; adb fails because port 5037 is held by Code.exe (PID 24392), which answers HTTP. Blocks emulator/device smoke test | User | Phase 0 |
+| B-006 | RESOLVED 2026-11-09: adb uses port 5099, licenses accepted, phone connected. Was: (deferred to Phase 3, D-042) `flutter doctor`: Android licenses not accepted; adb fails because port 5037 is held by Code.exe (PID 24392), which answers HTTP. Blocks emulator/device smoke test | User | Phase 0 |
 
 ## Open questions (full list: docs/07-open-questions.md)
 Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), test devices (deferred, Q-013). All others answered.
@@ -155,6 +166,7 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-025 | `app/` based on template github.com/ahsanulhoqueabir/flutter | User |
 | 2026-11-09 | D-042 | Close Phase 0 with device smoke test deferred to Phase 3 | User |
 | 2026-11-09 | D-053..D-056 | Phase 3 gating answers (recorded only, Phase 3 not started): minimal neutral theme #1F3A5F; flutter_secure_storage + supabase_flutter (versions to verify); local dev server as backend URL; physical Android phone for tests | User |
+| 2026-11-09 | D-058 | Phase 3 closed after the user's phone run. Removed template posts sample and edit-profile screen; Flutter dev backend via `adb reverse` (localhost:3000) | User confirmed / agent |
 | 2026-11-09 | D-057 | Phase 3 answers: contacts = name + phone only; phone format = existing DB checks; web first. Agent design (revisable): admin cookies `pj_access`/`pj_refresh`, refresh cookie lifetime 7 days (proposed, not in PRD), new routes `/api/admin/session[/refresh]` | User / agent |
 | 2026-11-09 | D-052 | Email domain = jnu.ac.bd or any subdomain; PRD 5.1 amended | User |
 | 2026-11-09 | D-051 | Vitest as test runner; @types/node bumped to ^24 | User |

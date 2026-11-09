@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "dev",
+  "APP_NAME": "Protect JnU Dev",
+  "API_BASE_URL": "https://jsonplaceholder.typicode.com",
+  "ENABLE_HTTP_LOGS": "true",
+  "USE_MOCK_AUTH": "true"
+}

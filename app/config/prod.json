@@ -1,7 +1,7 @@
 {
   "APP_ENV": "prod",
   "APP_NAME": "Protect JnU",
-  "API_BASE_URL": "",
+  "API_BASE_URL": "https://protect-jnu.vercel.app",
   "ENABLE_HTTP_LOGS": "false",
   "SUPABASE_URL": "https://bthjjlpylvauiolwrdfn.supabase.co",
   "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_TZQVLSHM3-2kpXkThKeM9Q_Goi8RBuE"

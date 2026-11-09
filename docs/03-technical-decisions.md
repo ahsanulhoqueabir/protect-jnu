@@ -48,6 +48,11 @@ These were chosen by the agent under that delegation. Each is **revisable**: tel
 | D-032 | Still a verification task (see below) | |
 | D-038 | Phase 0 sample cleanup in `app/`: remove about, gallery and onboarding (and their routes, redirect parameter, settings tiles, storage key, tests); keep `posts` as the reference feature until the first real feature replaces it. `LegalScreen` (terms/privacy placeholder) moved to `features/status/presentation/legal_screen.dart` | User, 2026-11-09 |
 | D-039 | Flutter upgraded 3.47.2 → 3.47.9 (Dart 3.13.7) to satisfy template `sdk: ^3.13.7` (closes D-036 verify for Flutter) | User, 2026-11-09 |
+| D-046 | Generated DB types stay in `web/types/database.types.ts` and must match the live DB. `tsc` and `npm run build` are allowed to fail on 4 template files (services/auth.service.ts, services/profile.service.ts, types/auth.types.ts, types/profile.types.ts; 9 errors on 2026-11-09) until Phase 2 rewrites auth and profile code; fixing them is the FIRST Phase 2 task. Supersedes the 'build passes' state from Phase 0 for `web/` | User, 2026-11-09 |
+| D-045 | Adds migration `0010_client_write_guards.sql` to Phase 1: pin alert columns other than `status` for signed-in non-admin clients; limit client message insert to `alert_id, body, sender_id`. Also: user will enable leaked-password protection in the Auth dashboard (B-008) | User, 2026-11-09 |
+| D-044 | Phase 1 schema doc `docs/phases/phase-1-schema.md` approved. Q1 remove most client deletes; Q2 chat only while alert active/acknowledged; Q3 max 3 emergency contacts in DB. Approach: keep and extend the live schema (OTP tables, verification column, constraints, RLS hardening as new migrations) | User, 2026-11-09 |
+| D-043 | Closes D-032: sign-in gate = option A plus flag. Users are created via `auth.admin.createUser` WITHOUT `email_confirm`; after our OTP verifies, server calls `email_confirm: true` and sets the `profiles` verification flag; server code also checks the flag. Supabase's `email_not_confirmed` error is the enforced gate (verified 2026-11-09) | User, 2026-11-09 |
+| D-042 | Phase 0 closed without a device/emulator run of the app (APK builds, 28 tests pass); device smoke test deferred to Phase 3 and tracked as B-006 | User, 2026-11-09 |
 | D-041 | `web/`: `docs/nextjs/<version>/` is the sole Next.js reference for agents; `agentRules: false` in `web/next.config.ts` stops `next dev` from appending a block to `web/AGENTS.md` that points at `node_modules/next/dist/docs/`; that block was removed | User, 2026-11-09 |
 | D-040 | Known exception to the template's `npm audit` = 0 rule: 13 low/moderate findings via dev tools `shadcn` and `eslint-config-next`; the only fix is a breaking `--force` change. Re-check each phase | User, 2026-11-09 |
 
@@ -59,5 +64,16 @@ These were chosen by the agent under that delegation. Each is **revisable**: tel
 | ID | Question | Gate |
 |---|---|---|
 | D-032 | Verify (current Supabase docs/MCP) that `auth.admin.createUser` + `signInWithPassword` sends NO Supabase email, and how to block sign-in until OUR OTP verifies. Present verified options; user chooses | Phase 1/2 |
+
+### D-032 verification results (2026-11-09, dev project `bthjjlpylvauiolwrdfn`; user-approved test)
+Method: temporary migrations 0004/0005 let one reserved address pass the domain trigger; a throwaway user was created with `auth.admin.createUser` (no `email_confirm`), probed with `signInWithPassword`, then deleted; function restored (md5 of definition equals the original; users 3, profiles 3, no test user left).
+| Probe | Result |
+|---|---|
+| `createUser` without `email_confirm` | succeeds, user unconfirmed. Auth logs for the window show only signup / user_modified / token / delete events: **no mail or SMTP event** (absence in logs; not a docs guarantee) |
+| `signInWithPassword` while unconfirmed | 400 `email_not_confirmed`, no session |
+| same after `ban_duration: '876000h'` | 400 `user_banned`, no session (also when confirmed) |
+| after `email_confirm: true` and `ban_duration: 'none'` | succeeds, session issued |
+Not verified: Supabase docs search did not confirm the same statements; the "Confirm email" project setting was inferred from behavior, not read; whether anon-key public sign-up is disabled was not tested.
+Options for the sign-in gate (user chooses): (A) create users unconfirmed and call `email_confirm: true` after our OTP verifies (Supabase enforces the gate, no extra state); (B) ban until verified (works, but mixes with real bans); (C) own `profiles` verification flag checked by server code only. Agent recommendation: A plus the profile flag from D-034 as a second check.
 
 Process to close an item: ask the user → record answer here (move to Decided) → log in PROGRESS Decisions.

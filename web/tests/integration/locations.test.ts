@@ -153,6 +153,7 @@ describe("live location rows (Phase 5)", () => {
 
     const adminSeen = await listen(admin.token);
     const bSeen = await listen(b.token);
+    await sleep(2000); // SUBSCRIBED can precede the server-side change listener
     const sent = Date.now();
     expect((await phoneUpload(asA, id, a.id, [1])).error).toBeNull();
     for (let i = 0; i < 40 && adminSeen.length === 0; i++) await sleep(250);

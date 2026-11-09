@@ -61,6 +61,7 @@ Status: IN PROGRESS (started 2026-11-09). Spec: `docs/phases/phase-5-location-ma
 - [x] 9. Placed in `/admin/alerts/[id]` (section "Live location"); `npx tsc --noEmit` 0 errors, `npm run lint` clean, `npm test` 85 passed, `npm run build` OK. Not browser-checked
 - Index `idx_locations_alert_recorded_at (alert_id, recorded_at desc)` already exists (baseline 0000), so no migration needed; any migration goes through MCP + `web/schemas/`
 
+- 0015 run by the user and verified by MCP (unique (alert_id, recorded_at)). `web/tests/integration/locations.test.ts` (2 tests, run alone): dedupe (re-sent and overlapping batches -> 4 rows), trail order, student B cannot insert on or read A's alert nor spoof A's id, owner and admin read, insert after cancel refused with 42501, admin websocket receives a `locations` insert and another student does not. Passed 3 of 3 runs after a 2 s wait post-subscribe; WITHOUT that wait the first run got no event (same subscribe race as the 1-in-11 flake in Phase 4). The map covers it by loading on SUBSCRIBED and polling
 - Evidence so far: `flutter analyze` 0 issues; `flutter test` 76 passed (7 new; SOS widget tests now override the position source/queue/uploader)
 
 ## Phase 4 tasks

@@ -94,11 +94,16 @@ available.
 
 -   Registration collects the student's name, student ID, university
     email, and password.
--   Only email addresses ending in `@jnu.ac.bd` are accepted. Validate
+-   Only email addresses on the university domain are accepted: the
+    address must end in `@jnu.ac.bd` or in `@<department>.jnu.ac.bd`
+    (a subdomain of `jnu.ac.bd`, for example `@cse.jnu.ac.bd`). Look-alike
+    domains such as `jnu.ac.bd.example.com` are rejected. Validate
     the domain in the UI and enforce it again on the trusted server
     side; client-side validation alone is insufficient.
+    *(Wording amended 2026-11-09 at the project owner's request to allow
+    department subdomains; see decision D-052.)*
 -   **University email ownership must be verified using a one-time
-    password (OTP).** The OTP is sent to the registered `@jnu.ac.bd`
+    password (OTP).** The OTP is sent to the registered university
     address through Brevo's Transactional Email API. A verification link
     is not used for this flow.
 -   The OTP flow must have explicit expiry and abuse protection:
@@ -428,9 +433,10 @@ user-facing data.
                                       resend cooldown, and server-side
                                       rate limiting.
 
-  Students outside the university     Enforce the `@jnu.ac.bd` domain on
-  register                            the trusted server, not only in the
-                                      form.
+  Students outside the university     Enforce the university domain
+  register                            (`@jnu.ac.bd` and its subdomains)
+                                      on the trusted server, not only in
+                                      the form.
 
   An unverified account accesses      Gate protected access on successful
   protected features                  server-side OTP verification and

@@ -109,7 +109,7 @@ describe("parseBody", () => {
       expect(parsed.response.status).toBe(422);
       const body = await parsed.response.json();
       expect(body.code).toBe("email_domain_not_allowed");
-      expect(body.error).toBe("Use your @jnu.ac.bd university email");
+      expect(body.error).toBe("Use your Jagannath University email (ending in jnu.ac.bd)");
     }
   });
 

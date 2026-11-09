@@ -6,7 +6,7 @@ IDs are used in phase docs and PROGRESS. "PRD §" = section in [PRD.md](PRD.md).
 | ID | Requirement | PRD § | Priority | Phase |
 |---|---|---|---|---|
 | FR-AUTH-1 | Register with name, student ID, university email, password | 5.1 | P0 | 3 |
-| FR-AUTH-2 | Only `@jnu.ac.bd` emails; validated in UI and on server | 5.1 | P0 | 1,2,3 |
+| FR-AUTH-2 | Only `@jnu.ac.bd` emails or a subdomain of it (`@cse.jnu.ac.bd`, D-052); validated in UI and on server | 5.1 | P0 | 1,2,3 |
 | FR-AUTH-3 | Email ownership verified by 6-digit OTP via Brevo (no link) | 5.1 | P0 | 2,3 |
 | FR-AUTH-4 | OTP: CSPRNG, 10-min TTL, single use, 5 attempts, hashed storage, never logged/returned | 5.1 | P0 | 2 |
 | FR-AUTH-5 | Resend: 60s cooldown; default max 3 sends / 15 min / email (configurable); new OTP invalidates older | 5.1 | P0 | 2 |

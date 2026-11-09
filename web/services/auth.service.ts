@@ -19,7 +19,7 @@ import type {
   VerifyOtpParams,
 } from "@/types/auth.types";
 import type { ServiceResult } from "@/types/generic.types";
-import type { PublicProfile } from "@/types/profile.types";
+import type { Profile, PublicProfile } from "@/types/profile.types";
 
 const GENERIC = "Something went wrong. Try again later.";
 const NOT_VERIFIED = "Verify your university email before signing in.";
@@ -47,6 +47,30 @@ function toTokens(session: {
  * `profiles.email_verified_at` is the second check (D-043).
  */
 export class AuthService {
+  /**
+   * Registration for an email that already has an account. Verified: `email_taken`.
+   * Unverified: keep the original password (a second registration must never replace it) and
+   * send a fresh code. Recovery for a forgotten password is /forgot-password.
+   */
+  private static async registerExisting(
+    profile: Profile,
+    email: string,
+  ): Promise<ServiceResult<{ email: string; resend_available_in: number }>> {
+    if (profile.email_verified_at) {
+      return failure("An account with this email already exists.", {
+        code: "email_taken",
+      });
+    }
+    const issued = await OtpService.issue({
+      userId: profile.id,
+      email: profile.university_email,
+      name: profile.full_name,
+      purpose: "email_verification",
+    });
+    if (!issued.success) return issued;
+    return success({ email, ...issued.data });
+  }
+
   /** Create an unverified account and email a verification code. No session is returned. */
   static async register(
     params: RegisterParams,
@@ -56,21 +80,7 @@ export class AuthService {
       if (!existing.success) return failure(GENERIC, { code: "internal_error" });
 
       if (existing.data) {
-        if (existing.data.email_verified_at) {
-          return failure("An account with this email already exists.", {
-            code: "email_taken",
-          });
-        }
-        // Unverified: keep the original password (a second registration must never replace it)
-        // and send a fresh code. Recovery for a forgotten password is /forgot-password.
-        const issued = await OtpService.issue({
-          userId: existing.data.id,
-          email: existing.data.university_email,
-          name: existing.data.full_name,
-          purpose: "email_verification",
-        });
-        if (!issued.success) return issued;
-        return success({ email: params.email, ...issued.data });
+        return await AuthService.registerExisting(existing.data, params.email);
       }
 
       const sameId = await ProfileService.getByStudentId(params.student_id);
@@ -104,7 +114,12 @@ export class AuthService {
             code: "weak_password",
           });
         }
-        // A concurrent registration with the same student ID fails inside the DB trigger.
+        // A concurrent registration fails inside Auth or the DB trigger with a generic error.
+        // Re-read both keys: the winner's account now exists.
+        const racedEmail = await ProfileService.getByEmail(params.email);
+        if (racedEmail.success && racedEmail.data) {
+          return await AuthService.registerExisting(racedEmail.data, params.email);
+        }
         const raced = await ProfileService.getByStudentId(params.student_id);
         if (raced.success && raced.data) {
           return failure("An account with this student ID already exists.", {

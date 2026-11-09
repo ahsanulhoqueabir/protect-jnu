@@ -17,7 +17,7 @@
 |---|---|---|
 | Registration, OTP issue/verify, login, refresh, password reset | `web/` API routes + `services/` | Supabase Auth identity + our OTP/Brevo (D-027). Server-only secrets |
 | Email sending | `web/` server → Brevo | Flutter never calls Brevo |
-| Domain enforcement `@jnu.ac.bd` | UI + server (+ DB constraint, see Phase 1) | Server is authoritative |
+| Domain enforcement `@jnu.ac.bd` and its subdomains (D-052) | UI + server (+ DB constraint, see Phase 1) | Server is authoritative |
 | Data access from clients | Supabase SDK with RLS | Requires client JWT that Postgres RLS can read — **mechanism OPEN (D-004)** |
 | Realtime (alerts, locations, messages) | Supabase Realtime | Subject to RLS |
 | Map | `web/` Leaflet + OSM tiles | Attribution required |

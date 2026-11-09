@@ -7,11 +7,18 @@ import { isCommonPassword } from "@/lib/common-passwords";
  */
 
 /** Exact message used to detect a domain failure and return `email_domain_not_allowed`. */
-export const EMAIL_DOMAIN_MESSAGE = "Use your @jnu.ac.bd university email";
+export const EMAIL_DOMAIN_MESSAGE =
+  "Use your Jagannath University email (ending in jnu.ac.bd)";
 
-const UNIVERSITY_EMAIL = /^[^@\s]+@jnu\.ac\.bd$/;
+/**
+ * `name@jnu.ac.bd` or `name@<dept>[.<more>].jnu.ac.bd` (D-052). Each label is letters, digits and
+ * hyphens, not starting or ending with a hyphen, so `jnu.ac.bd.evil.com`, `xjnu.ac.bd`,
+ * `.jnu.ac.bd` and `a@b@jnu.ac.bd` are all rejected. Same pattern as the DB constraint (0012).
+ */
+const UNIVERSITY_EMAIL =
+  /^[^@\s]+@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)*jnu\.ac\.bd$/;
 
-/** Trimmed, lowercased, valid, and ending exactly in @jnu.ac.bd (PRD 5.1, FR-AUTH-2). */
+/** Trimmed, lowercased, valid, on `jnu.ac.bd` or one of its subdomains (PRD 5.1, FR-AUTH-2). */
 const emailField = z
   .string()
   .trim()

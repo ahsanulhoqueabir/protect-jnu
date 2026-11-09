@@ -163,6 +163,32 @@ begin
     insert into pg_temp.results (name, expect_state, state) values ('D3 duplicate student_id rejected', 'unique_violation', 'unique_violation');
   end;
 
+  -- D-052 (migration 0012): department subdomains are accepted, look-alikes are not.
+  begin
+    insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+    values (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'dept@cse.jnu.ac.bd',
+            '{"full_name":"Dept","student_id":"B900000005"}', now(), now());
+    insert into pg_temp.results (name, expect_state, state) values ('D4 department subdomain accepted (cse.jnu.ac.bd)', 'ok', 'ok');
+  exception when others then
+    insert into pg_temp.results (name, expect_state, state) values ('D4 department subdomain accepted (cse.jnu.ac.bd)', 'ok', sqlstate);
+  end;
+  begin
+    insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+    values (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'a@cse.jnu.ac.bd.evil.com',
+            '{"full_name":"Evil","student_id":"B900000006"}', now(), now());
+    insert into pg_temp.results (name, expect_state, state) values ('D5 look-alike domain rejected', 'check_violation', 'ok');
+  exception when check_violation then
+    insert into pg_temp.results (name, expect_state, state) values ('D5 look-alike domain rejected', 'check_violation', 'check_violation');
+  end;
+  begin
+    insert into auth.users (id, instance_id, aud, role, email, raw_user_meta_data, created_at, updated_at)
+    values (gen_random_uuid(), '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'a@xjnu.ac.bd',
+            '{"full_name":"Evil","student_id":"B900000007"}', now(), now());
+    insert into pg_temp.results (name, expect_state, state) values ('D6 prefix-glued domain rejected (xjnu.ac.bd)', 'check_violation', 'ok');
+  exception when check_violation then
+    insert into pg_temp.results (name, expect_state, state) values ('D6 prefix-glued domain rejected (xjnu.ac.bd)', 'check_violation', 'check_violation');
+  end;
+
   with r as (
     select *, (state = expect_state and (expect_n is null or (case when ge then n >= expect_n else n = expect_n end))) as pass
     from pg_temp.results

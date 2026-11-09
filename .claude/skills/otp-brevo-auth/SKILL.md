@@ -6,7 +6,7 @@ description: Use when implementing or modifying registration, OTP, login, sessio
 # OTP + Brevo + Custom Auth Rules
 
 Fixed by PRD 5.1/7.4 and decisions D-001 (amended)/D-027: Supabase Auth is only the identity/password store; OTP, Brevo, gating and reset are our code. Never let Supabase send an email; verify behavior first (D-032).
-- Domain `@jnu.ac.bd` enforced on the **server** (plus UI + DB constraint). Normalize email (trim, lowercase) first.
+- Domain `@jnu.ac.bd` or a subdomain such as `@cse.jnu.ac.bd` (D-052) enforced on the **server** (plus UI + DB constraint). Normalize email (trim, lowercase) first.
 - OTP: 6 digits, CSPRNG, TTL 10 min, single use, max 5 attempts, 60 s resend cooldown, default max 3 sends/15 min/email (configurable), new OTP supersedes old (same email + purpose), server-time expiry, store only a hash, constant-time compare.
 - Never log or return OTP, reset tokens, hashes, API keys, raw Brevo responses. Error messages are generic where needed.
 - Emails only via Brevo Transactional API from server code; Flutter never calls Brevo; no Supabase SMTP/Auth email.

@@ -1,7 +1,8 @@
 /**
  * Supabase `Database` type — the single source of truth for table/view/RPC shapes.
  * GENERATED 2026-11-09 from the live dev project (Supabase MCP `generate_typescript_types`),
- * after migrations 0006-0008. 0009 and 0010 change no columns, so these types stay valid.
+ * after migrations 0006-0011 (0009 and 0010 change no columns; 0011 adds the otp_* and
+ * revoke_user_sessions functions).
  * Regenerate after any schema change; never edit by hand.
  * Domain types (`x.types.ts`) must derive from this file, never redeclare columns.
  */
@@ -291,6 +292,42 @@ export type Database = {
       }
       current_user_id: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      otp_begin_attempt: {
+        Args: {
+          p_max_attempts: number
+          p_purpose: Database["public"]["Enums"]["otp_purpose"]
+          p_user_id: string
+        }
+        Returns: {
+          attempts_after: number
+          otp_id: string
+          status: string
+          stored_hash: string
+        }[]
+      }
+      otp_consume: { Args: { p_otp_id: string }; Returns: boolean }
+      otp_issue: {
+        Args: {
+          p_code_hash: string
+          p_cooldown_seconds: number
+          p_email: string
+          p_max_sends: number
+          p_purpose: Database["public"]["Enums"]["otp_purpose"]
+          p_ttl_seconds: number
+          p_user_id: string
+          p_window_seconds: number
+        }
+        Returns: {
+          otp_id: string
+          retry_after_seconds: number
+          status: string
+        }[]
+      }
+      otp_revoke_issue: {
+        Args: { p_email: string; p_otp_id: string }
+        Returns: undefined
+      }
+      revoke_user_sessions: { Args: { p_user_id: string }; Returns: undefined }
     }
     Enums: {
       alert_status: "active" | "acknowledged" | "resolved" | "cancelled"

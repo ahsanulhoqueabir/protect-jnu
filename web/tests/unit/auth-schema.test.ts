@@ -28,14 +28,38 @@ describe("university email (FR-AUTH-2)", () => {
   });
 
   it.each([
+    "b210305040@jnu.ac.bd",
+    "b210305040@cse.jnu.ac.bd",
+    "a@eee.jnu.ac.bd",
+    "a@law.jnu.ac.bd",
+    "a@x.y.jnu.ac.bd",
+    "a@c-s.jnu.ac.bd",
+    "a@c0.jnu.ac.bd",
+  ])("accepts %s (jnu.ac.bd or a department subdomain, D-052)", (email) => {
+    expect(registerSchema.safeParse({ ...valid, email }).success).toBe(true);
+  });
+
+  it("normalises a subdomain address too", () => {
+    const r = registerSchema.safeParse({ ...valid, email: " B210305040@CSE.JNU.AC.BD " });
+    expect(r.data?.email).toBe("b210305040@cse.jnu.ac.bd");
+  });
+
+  it.each([
     "x@gmail.com",
     "x@jnu.ac.bd.evil.com",
+    "x@cse.jnu.ac.bd.evil.com",
     "x@evil.com@jnu.ac.bd",
-    "x@sub.jnu.ac.bd",
+    "x@xjnu.ac.bd",
+    "x@evil-jnu.ac.bd",
+    "x@.jnu.ac.bd",
+    "x@-cse.jnu.ac.bd",
+    "x@cse-.jnu.ac.bd",
+    "x@cse..jnu.ac.bd",
     "x@jnu.ac.bdx",
-    "x@mail.jnu.ac.bd",
     "x@jnu.edu.bd",
+    "x@jnu.ac.bd.",
     "@jnu.ac.bd",
+    "x y@jnu.ac.bd",
   ])("rejects %s", (email) => {
     const r = registerSchema.safeParse({ ...valid, email });
     expect(r.success).toBe(false);

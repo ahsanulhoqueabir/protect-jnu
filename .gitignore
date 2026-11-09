@@ -1,2 +1,6 @@
 # Local tooling settings (machine-specific, not shared)
 .puku-cli/
+
+# Scratch markers written by the integration test runs
+.itest-start
+.itest-window-start

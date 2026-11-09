@@ -10,7 +10,7 @@ type ParseResult<T> =
 /**
  * Parse + validate a JSON body with a shared Zod schema (from `schema/`).
  * Failures are 422 `validation_failed`, or `email_domain_not_allowed` when the email is not
- * a @jnu.ac.bd address. Issue details never include the submitted values.
+ * a university address (jnu.ac.bd or a subdomain). Issue details never include the submitted values.
  * @example
  * const parsed = await parseBody(request, loginSchema);
  * if (!parsed.ok) return parsed.response;

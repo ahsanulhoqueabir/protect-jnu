@@ -14,7 +14,7 @@ Status: **APPROVED by the user 2026-11-09, all proposals R1-R7 as written** (sha
 **Validation (shared Zod schemas in `web/schema/auth.schema.ts`, same rules as Flutter):**
 | Field | Rule |
 |---|---|
-| email | valid email AND ends with `@jnu.ac.bd` after normalisation (checked on the server for every route that takes an email) |
+| email | valid email AND `@jnu.ac.bd` or a subdomain such as `@cse.jnu.ac.bd` after normalisation (D-052; checked on the server for every route that takes an email) |
 | student_id | `^B[0-9]{9}$` (D-020) |
 | full_name | trimmed, 1–100 chars |
 | password / new_password | 8–64 chars, no composition rules (D-015); rejected if on a small built-in list of very common passwords |
@@ -33,7 +33,7 @@ Creates the Supabase Auth user **unconfirmed** (`email_confirm` not set, D-043; 
 - 201 `data: { email, resend_available_in: 60 }`
 - 409 `email_taken` (verified account exists) · 409 `student_id_taken`
 - Existing **unverified** account with the same email: the stored password is **never replaced** (a second registration must not be able to set the password of an account whose owner then verifies it). A fresh OTP is issued (subject to throttling) and 201 is returned. The user who forgot the original password uses `/forgot-password`.
-- 422 `validation_failed` (incl. non-`@jnu.ac.bd` → `code: "email_domain_not_allowed"`) · 429 (see 3) · 502 `email_delivery_failed`
+- 422 `validation_failed` (incl. a non-university address → `code: "email_domain_not_allowed"`) · 429 (see 3) · 502 `email_delivery_failed`
 
 ### POST `/verify-otp` (public)
 Body `{ email, code, purpose: "email_verification" }`.

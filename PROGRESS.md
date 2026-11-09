@@ -1,7 +1,7 @@
 # PROGRESS
 
 Last updated: 2026-11-09
-**Current phase:** Phase 3 DONE 2026-11-09 (user checked every flow on the phone and said OK). Phase 4 IN PROGRESS (started 2026-11-09)
+**Current phase:** Phase 6 closed 2026-11-09 by user instruction (verify-phase not run, B-019). Phases 4 and 5 closed the same way. Next: Phase 7 (not started; needs the user's go-ahead)
 
 Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]` blocked
 
@@ -14,7 +14,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 3 | Auth flows: Flutter + Admin web | Done 2026-11-09 (user-confirmed after manual phone run) | 2 |
 | 4 | SOS flow + live alerts list | Closed 2026-11-09 by user instruction; manual phone/browser checks carried (B-015..B-017) | 3 |
 | 5 | Live location + Leaflet map | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-018) | 4 |
-| 6 | Real-time chat | In progress (started 2026-11-09; waiting on gating answers) | 4 |
+| 6 | Real-time chat | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-019) | 4 |
 | 7 | Photo/video capture + local gallery | Not started | 3 (SOS integration: 4) |
 | 8 | Reports + CSV export | Not started | 4 |
 | 9 | Full testing, bug fixing, demo/report prep | Not started | 1–8 |
@@ -49,7 +49,7 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - Hosting Q-005: Vercel (recorded).
 
 ## Phase 6 tasks
-Status: IN PROGRESS (started 2026-11-09). Spec: `docs/phases/phase-6-chat.md`. Prerequisites: Phase 4 closed by user (D-065), Phase 5 closed (D-071). D-021 already answered. Gating questions answered 2026-11-09 (D-072): 1000 chars; read-only after resolve/cancel; in-app-only notice; offline = failed + tap to retry; one RPC/view for unread + last message.
+Status: CLOSED 2026-11-09 by user instruction ("close this phase with note that verify phase is not tested"). `verify-phase` was NOT run; no manual phone or browser check was done; completion criteria "bidirectional chat on device + dashboard" and "unread counts correct" are met only by automated tests (see below). Spec: `docs/phases/phase-6-chat.md`. Prerequisites: Phase 4 closed by user (D-065), Phase 5 closed (D-071). D-021 already answered. Gating questions answered 2026-11-09 (D-072): 1000 chars; read-only after resolve/cancel; in-app-only notice; offline = failed + tap to retry; one RPC/view for unread + last message.
 - [x] 1. Confirmed via MCP: columns id, alert_id, sender_id, body, sent_at, read_at; GAPS found (no length CHECK, admin insert without status check, mark-read let a user mark own messages) fixed by `web/schemas/0016_chat_rules.sql`, run manually by the user and verified by MCP query (CHECK present NOT VALID, 5 policies incl. "mark other party messages read", `chat_conversations()` security invoker, anon cannot execute). Types updated (`chat_conversations` added by hand to `database.types.ts`, same as MCP-generated)
 - Web side built (admin API uses the user-JWT client, user chose it): `lib/api/supabase.ts createSupabaseUserClient`, `services/chat.service.ts`, `schema/chat.schema.ts`, `types/chat.types.ts`, routes `/api/admin/conversations` and `/api/admin/alerts/:id/messages` (GET/POST/PATCH), documented in api-contract 6b; UI `components/chat/chat-panel.tsx` (in alert detail), `/admin/conversations` list with unread badges, nav link. Evidence: `npx tsc` 0 errors, lint clean, `npm run build` OK, `npm test` 88 passed (3 new mergeMessages), `tests/integration/chat.test.ts` 2 tests against the dev project: isolation (B cannot send/read A's thread), length (0/spaces/1001 refused, 1000 ok), spoofed sender refused, unread admin 2 -> 0 and student 1 -> 0, cannot mark own messages, cannot edit body, history order + `since`, read-only after resolve for admin (`chat_closed`) and student (42501), history still readable. NOT browser-checked
 - Realtime test (admin + owner get the insert, other student none, <2.5 s): passed 5 of 6 runs; one run (right after the first test in the same file) delivered nothing to the admin socket, same unexplained flake class as Phases 4 and 5. UI falls back to refetch on SUBSCRIBED and polling (5 s down / 30 s up)
@@ -213,6 +213,7 @@ Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-1-database-rls
 | B-016 | `auth-flows.test.ts > register > rejects a taken email and a taken student ID` failed once in a serial run (passed in Phase 2). Not investigated | Agent | Phase 9 |
 | B-017 | Phase 4 manual checks not done: dashboard in a browser with the admin account, SOS on the physical phone, real latency. User will report results | User | Phase 4 sign-off |
 | B-018 | Phase 5 closed without verify-phase and without the manual checks: foreground notification, 10 s sending, screen-off 10+ min, airplane-mode queue (real SQLite class untested), stop after resolve/cancel on the phone; live map, attribution and tile-failure banner in a browser | User | Phase 5 sign-off |
+| B-019 | Phase 6 closed without verify-phase and without manual checks: chat both ways on phone + dashboard, unread badge/counts, read-only after resolve, failed-send retry offline, Dart repository against the real DB (Realtime stream with order/limit, insert, mark read), supabase_flutter resubscribe after a socket drop; one unexplained Realtime test flake (1 of 6) | User | Phase 6 sign-off |
 | B-006 | RESOLVED 2026-11-09: adb uses port 5099, licenses accepted, phone connected. Was: (deferred to Phase 3, D-042) `flutter doctor`: Android licenses not accepted; adb fails because port 5037 is held by Code.exe (PID 24392), which answers HTTP. Blocks emulator/device smoke test | User | Phase 0 |
 
 ## Open questions (full list: docs/07-open-questions.md)
@@ -230,6 +231,7 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-025 | `app/` based on template github.com/ahsanulhoqueabir/flutter | User |
 | 2026-11-09 | D-042 | Close Phase 0 with device smoke test deferred to Phase 3 | User |
 | 2026-11-09 | D-053..D-056 | Phase 3 gating answers (recorded only, Phase 3 not started): minimal neutral theme #1F3A5F; flutter_secure_storage + supabase_flutter (versions to verify); local dev server as backend URL; physical Android phone for tests | User |
+| 2026-11-09 | D-073 | Phase 6 closed at the user's instruction without running verify-phase; manual checks carried as B-019 | User |
 | 2026-11-09 | D-072 | Phase 6 answers: 1000-char limit; read-only after resolve/cancel; in-app-only student notice; offline = failed + retry; one RPC/view for unread + last message | User |
 | 2026-11-09 | D-071 | Phase 5 closed at the user's instruction without running verify-phase; manual checks carried as B-018 | User |
 | 2026-11-09 | D-065 | Phase 4 closed at the user's instruction before the manual phone/browser checks and with the integration suite not fully green; both recorded as carried (B-015..B-017) | User |

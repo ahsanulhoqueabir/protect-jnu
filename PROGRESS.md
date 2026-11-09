@@ -1,7 +1,7 @@
 # PROGRESS
 
 Last updated: 2026-11-09
-**Current phase:** Phase 6 closed 2026-11-09 by user instruction (verify-phase not run, B-019). Phases 4 and 5 closed the same way. Next: Phase 7 (not started; needs the user's go-ahead)
+**Current phase:** Phase 7 closed 2026-11-09 by user instruction (verify-phase not run, B-020). Phases 4, 5 and 6 closed the same way. Next: Phase 8 (not started; needs the user's go-ahead)
 
 Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]` blocked
 
@@ -15,7 +15,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 4 | SOS flow + live alerts list | Closed 2026-11-09 by user instruction; manual phone/browser checks carried (B-015..B-017) | 3 |
 | 5 | Live location + Leaflet map | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-018) | 4 |
 | 6 | Real-time chat | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-019) | 4 |
-| 7 | Photo/video capture + local gallery | In progress (started 2026-11-09) | 3 (SOS integration: 4) |
+| 7 | Photo/video capture + local gallery | Closed 2026-11-09 by user instruction; verify-phase NOT run; phone checks not done (B-020) | 3 (SOS integration: 4) |
 | 8 | Reports + CSV export | Not started | 4 |
 | 9 | Full testing, bug fixing, demo/report prep | Not started | 1–8 |
 
@@ -49,7 +49,7 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - Hosting Q-005: Vercel (recorded).
 
 ## Phase 7 tasks
-Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-7-media.md`. Prerequisites: Phase 3 done, Phase 4 closed, Phase 6 closed (D-073). Answers 2026-11-09 (D-074): app-private storage; video 60 s medium quality; delete + alert-id tag in a local index; official `camera` + `video_player`.
+Status: CLOSED 2026-11-09 by user instruction ("close the phase"). `verify-phase` was NOT run; nothing was run on the phone, so the completion criteria (capture + gallery working, no upload verified, SOS/location unaffected) are met only by code and automated tests (B-020). Spec: `docs/phases/phase-7-media.md`. Prerequisites: Phase 3 done, Phase 4 closed, Phase 6 closed (D-073). Answers 2026-11-09 (D-074): app-private storage; video 60 s medium quality; delete + alert-id tag in a local index; official `camera` + `video_player`.
 - [x] 1. Verified on pub.dev 2026-11-09 and added: `camera ^0.12.2`, `video_player ^2.14.1`, `path_provider ^2.1.6` (user approved path_provider; all need Dart ^3.12 / Flutter >=3.44, project has 3.47.9). minSdk = `flutter.minSdkVersion`; not separately checked against the camera plugin's own minimum (build will show)
 - [~] 2. Camera/microphone: CAMERA and RECORD_AUDIO added to the manifest; the camera plugin requests them on `initialize`; denial shows a message in `camera_screen.dart`. Denial path NOT run on the phone (the plugin's error code names are matched by substring, unverified)
 - [~] 3. `features/media`: `LocalMediaStore` (app documents/media + `index.json`, serialised writes), 60 s auto-stop, medium quality, alert id tag only while an alert is open. Store tested on real temp files
@@ -57,7 +57,8 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-7-media.md`. 
 - [~] 5. Entry points: Home "Photos and videos", Active Alert "Take photo or video" (below cancel/Done). Camera screen never touches the location service (by code only; NOT checked on the phone with MCP rows)
 - [~] 6. Code review only: `features/media` has no network, Dio or Supabase use. No network inspection done
 - [~] 7. Evidence: `dart run scripts/check.dart` = format OK, analyze 0 issues, 92 tests passed (7 new in `test/features/media/media_test.dart`: file moved into the private folder and survives a new store instance, newest first and missing files dropped, delete, parallel saves, damaged index, provider add/remove, empty gallery). NOT tested: the camera screen (needs a device), permission denial, video playback
-- NOT done: any run on the phone; no `flutter build apk` yet for this phase
+- `flutter build apk --debug --dart-define-from-file=config/dev.json` built `app-debug.apk` (about 390 s). The first attempt failed after 659 s with a Gradle error whose cause I did not capture; the identical re-run succeeded, so the cause is unknown (guess: transient)
+- NOT done: any run on the phone (camera, permission denial, video playback, restart persistence, location rows during capture, network inspection)
 
 ## Phase 6 tasks
 Status: CLOSED 2026-11-09 by user instruction ("close this phase with note that verify phase is not tested"). `verify-phase` was NOT run; no manual phone or browser check was done; completion criteria "bidirectional chat on device + dashboard" and "unread counts correct" are met only by automated tests (see below). Spec: `docs/phases/phase-6-chat.md`. Prerequisites: Phase 4 closed by user (D-065), Phase 5 closed (D-071). D-021 already answered. Gating questions answered 2026-11-09 (D-072): 1000 chars; read-only after resolve/cancel; in-app-only notice; offline = failed + tap to retry; one RPC/view for unread + last message.
@@ -225,6 +226,7 @@ Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-1-database-rls
 | B-017 | Phase 4 manual checks not done: dashboard in a browser with the admin account, SOS on the physical phone, real latency. User will report results | User | Phase 4 sign-off |
 | B-018 | Phase 5 closed without verify-phase and without the manual checks: foreground notification, 10 s sending, screen-off 10+ min, airplane-mode queue (real SQLite class untested), stop after resolve/cancel on the phone; live map, attribution and tile-failure banner in a browser | User | Phase 5 sign-off |
 | B-019 | Phase 6 closed without verify-phase and without manual checks: chat both ways on phone + dashboard, unread badge/counts, read-only after resolve, failed-send retry offline, Dart repository against the real DB (Realtime stream with order/limit, insert, mark read), supabase_flutter resubscribe after a socket drop; one unexplained Realtime test flake (1 of 6) | User | Phase 6 sign-off |
+| B-020 | Phase 7 closed without verify-phase and without phone checks: capture photo/video, files persist after restart, permission-denied messages (plugin error codes matched by substring, unverified), video playback, delete, location rows continue during video capture, network inspection shows no upload. Also: first debug APK build failed once for an uncaptured reason, re-run succeeded | User | Phase 7 sign-off |
 | B-006 | RESOLVED 2026-11-09: adb uses port 5099, licenses accepted, phone connected. Was: (deferred to Phase 3, D-042) `flutter doctor`: Android licenses not accepted; adb fails because port 5037 is held by Code.exe (PID 24392), which answers HTTP. Blocks emulator/device smoke test | User | Phase 0 |
 
 ## Open questions (full list: docs/07-open-questions.md)
@@ -242,6 +244,7 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-025 | `app/` based on template github.com/ahsanulhoqueabir/flutter | User |
 | 2026-11-09 | D-042 | Close Phase 0 with device smoke test deferred to Phase 3 | User |
 | 2026-11-09 | D-053..D-056 | Phase 3 gating answers (recorded only, Phase 3 not started): minimal neutral theme #1F3A5F; flutter_secure_storage + supabase_flutter (versions to verify); local dev server as backend URL; physical Android phone for tests | User |
+| 2026-11-09 | D-075 | Phase 7 closed at the user's instruction without running verify-phase; manual phone checks carried as B-020 | User |
 | 2026-11-09 | D-074 | Phase 7 answers: app-private storage; video 60 s medium; delete + alert-id tag (local index); official camera + video_player | User |
 | 2026-11-09 | D-073 | Phase 6 closed at the user's instruction without running verify-phase; manual checks carried as B-019 | User |
 | 2026-11-09 | D-072 | Phase 6 answers: 1000-char limit; read-only after resolve/cancel; in-app-only student notice; offline = failed + retry; one RPC/view for unread + last message | User |

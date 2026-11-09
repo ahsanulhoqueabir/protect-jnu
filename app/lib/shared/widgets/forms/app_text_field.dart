@@ -113,6 +113,8 @@ class AppEmailField extends StatelessWidget {
     this.textInputAction = TextInputAction.next,
     this.onSubmitted,
     this.enabled = true,
+    this.hint = 'you@example.com',
+    this.validator,
   });
 
   final TextEditingController controller;
@@ -120,13 +122,17 @@ class AppEmailField extends StatelessWidget {
   final TextInputAction textInputAction;
   final ValueChanged<String>? onSubmitted;
   final bool enabled;
+  final String hint;
+
+  /// Replaces the default required + generic email rule (e.g. the university-email rule).
+  final Validator? validator;
 
   @override
   Widget build(BuildContext context) {
     return AppTextField(
       label: label,
       controller: controller,
-      hint: 'you@example.com',
+      hint: hint,
       enabled: enabled,
       prefixIcon: Icons.mail_outline_rounded,
       keyboardType: TextInputType.emailAddress,
@@ -134,7 +140,9 @@ class AppEmailField extends StatelessWidget {
       autofillHints: const [AutofillHints.email],
       onSubmitted: onSubmitted,
       inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
-      validator: Validators.compose([Validators.required('Enter your email'), Validators.email()]),
+      validator:
+          validator ??
+          Validators.compose([Validators.required('Enter your email'), Validators.email()]),
     );
   }
 }

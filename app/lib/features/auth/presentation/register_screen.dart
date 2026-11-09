@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +14,7 @@ import '../../../shared/widgets/forms/app_password_field.dart';
 import '../../../shared/widgets/forms/app_selection_fields.dart';
 import '../../../shared/widgets/forms/app_text_field.dart';
 import '../auth_providers.dart';
+import '../data/auth_repository.dart';
 import 'widgets/auth_layout.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -25,6 +27,7 @@ class RegisterScreen extends ConsumerStatefulWidget {
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
+  final _studentId = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
@@ -32,10 +35,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   late final _privacyTap = TapGestureRecognizer()..onTap = () => context.push(Routes.privacy);
   bool _submitting = false;
   String? _serverEmailError;
+  String? _serverStudentIdError;
 
   @override
   void dispose() {
     _name.dispose();
+    _studentId.dispose();
     _email.dispose();
     _password.dispose();
     _confirm.dispose();
@@ -46,19 +51,34 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _submit() async {
     _serverEmailError = null;
+    _serverStudentIdError = null;
     if (_submitting || !_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
+    final email = _email.text.trim().toLowerCase();
     try {
       await ref
-          .read(authProvider.notifier)
-          .register(name: _name.text, email: _email.text, password: _password.text);
-    } on ValidationException catch (e) {
-      // Example of showing a server rule on its field, e.g. "email already taken".
-      _serverEmailError = e.fieldErrors['email'];
-      if (_serverEmailError != null) {
-        _formKey.currentState!.validate();
-      } else if (mounted) {
-        showAppSnack(context, e.message, type: SnackType.error);
+          .read(authRepositoryProvider)
+          .register(
+            fullName: _name.text.trim(),
+            studentId: _studentId.text,
+            email: email,
+            password: _password.text,
+          );
+      ref
+          .read(pendingVerificationProvider.notifier)
+          .set(PendingVerification(email: email, password: _password.text));
+      if (mounted) context.go(Routes.verifyEmailFor(email, sent: true));
+      return;
+    } on CodedApiException catch (e) {
+      switch (e.code) {
+        case 'email_taken' || 'email_domain_not_allowed':
+          _serverEmailError = e.message;
+          _formKey.currentState!.validate();
+        case 'student_id_taken':
+          _serverStudentIdError = e.message;
+          _formKey.currentState!.validate();
+        default:
+          if (mounted) showAppSnack(context, e.message, type: SnackType.error);
       }
     } on Object catch (e) {
       if (mounted) showAppSnack(context, userMessage(e), type: SnackType.error);
@@ -75,7 +95,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return AuthLayout(
       title: 'Create your account',
-      subtitle: 'It only takes a minute.',
+      subtitle: 'Use your Jagannath University email.',
       footer: AuthFooterLink(
         question: 'Already have an account?',
         action: 'Sign in',
@@ -90,33 +110,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               AppTextField(
                 label: 'Full name',
                 controller: _name,
-                hint: 'Ada Lovelace',
                 prefixIcon: Icons.person_outline_rounded,
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.name],
                 validator: Validators.compose([
                   Validators.required('Enter your name'),
-                  Validators.minLength(2),
-                  Validators.maxLength(80),
-                  Validators.name(),
+                  Validators.maxLength(100),
                 ]),
               ),
               const Gap(AppSpacing.md),
               AppTextField(
-                label: 'Email',
-                controller: _email,
-                hint: 'you@example.com',
-                prefixIcon: Icons.mail_outline_rounded,
-                keyboardType: TextInputType.emailAddress,
+                label: 'Student ID',
+                controller: _studentId,
+                hint: 'B210305040',
+                prefixIcon: Icons.badge_outlined,
+                textCapitalization: TextCapitalization.characters,
                 textInputAction: TextInputAction.next,
-                autofillHints: const [AutofillHints.email],
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]'))],
+                validator: Validators.compose([
+                  Validators.required('Enter your student ID'),
+                  Validators.studentId(),
+                  (_) => _serverStudentIdError,
+                ]),
+                onChanged: (_) => _serverStudentIdError = null,
+              ),
+              const Gap(AppSpacing.md),
+              AppEmailField(
+                controller: _email,
+                hint: 'you@cse.jnu.ac.bd',
                 validator: Validators.compose([
                   Validators.required('Enter your email'),
                   Validators.email(),
+                  Validators.universityEmail(),
                   (_) => _serverEmailError,
                 ]),
-                onChanged: (_) => _serverEmailError = null,
               ),
               const Gap(AppSpacing.md),
               AppPasswordField(
@@ -126,7 +154,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 validator: Validators.compose([
                   Validators.required('Choose a password'),
-                  Validators.password(),
+                  Validators.newPassword(),
                 ]),
               ),
               const Gap(AppSpacing.md),

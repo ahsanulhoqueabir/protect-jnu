@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/routes.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/network/api_exception.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/feedback/app_feedback.dart';
 import '../../../shared/widgets/forms/app_password_field.dart';
@@ -35,11 +36,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // The keyboard's Done key bypasses the button, so guard double submits here.
     if (_submitting || !_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
-    // On success the router redirects away from this screen.
-    await runGuarded(
-      context,
-      () => ref.read(authProvider.notifier).login(email: _email.text, password: _password.text),
-    );
+    final email = _email.text.trim().toLowerCase();
+    try {
+      // On success the router redirects away from this screen.
+      await ref.read(authProvider.notifier).login(email: email, password: _password.text);
+    } on CodedApiException catch (e) {
+      if (!mounted) return;
+      if (e.code == 'email_not_verified') {
+        // Unverified accounts go to the OTP screen (FR-AUTH-7); the password stays in memory
+        // only so the app can sign in right after verification.
+        ref
+            .read(pendingVerificationProvider.notifier)
+            .set(PendingVerification(email: email, password: _password.text));
+        context.go(Routes.verifyEmailFor(email));
+      } else {
+        showAppSnack(context, e.message, type: SnackType.error);
+      }
+    } on Object catch (e) {
+      if (mounted) showAppSnack(context, userMessage(e), type: SnackType.error);
+    }
     if (mounted) setState(() => _submitting = false);
   }
 
@@ -59,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppEmailField(controller: _email),
+              AppEmailField(controller: _email, hint: 'you@cse.jnu.ac.bd'),
               const Gap(AppSpacing.md),
               AppPasswordField(controller: _password, onSubmitted: (_) => _submit()),
               Align(

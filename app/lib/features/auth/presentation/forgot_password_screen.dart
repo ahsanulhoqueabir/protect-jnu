@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/router/routes.dart';
 import '../../../app/theme/app_spacing.dart';
+import '../../../core/forms/validators.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/feedback/app_feedback.dart';
 import '../../../shared/widgets/forms/app_text_field.dart';
-import '../auth_providers.dart';
+import '../data/auth_repository.dart';
 import 'widgets/auth_layout.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -20,7 +21,6 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
-  bool _sent = false;
 
   @override
   void dispose() {
@@ -30,45 +30,37 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    final email = _email.text.trim().toLowerCase();
     final ok = await runGuarded(
       context,
-      () => ref.read(authProvider.notifier).sendPasswordReset(_email.text),
+      () => ref.read(authRepositoryProvider).forgotPassword(email),
     );
-    if (ok && mounted) setState(() => _sent = true);
+    // The server answers the same whether or not the account exists, so this screen does too.
+    if (ok && mounted) context.go(Routes.resetPasswordFor(email));
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_sent) {
-      // Same wording whether or not the account exists, so this form can't be
-      // used to discover who has an account.
-      return AuthLayout(
-        title: 'Check your inbox',
-        subtitle: 'If an account exists for ${_email.text.trim()}, a reset link is on its way.',
-        child: Column(
-          children: [
-            AppButton(label: 'Back to sign in', onPressed: () => context.go(Routes.login)),
-            const Gap(AppSpacing.xs),
-            AppButton(
-              label: 'Use a different email',
-              variant: AppButtonVariant.text,
-              onPressed: () => setState(() => _sent = false),
-            ),
-          ],
-        ),
-      );
-    }
-
     return AuthLayout(
       title: 'Reset your password',
-      subtitle: "Enter your email and we'll send you a reset link.",
+      subtitle: "Enter your university email and we'll send you a 6-digit code.",
       child: Form(
         key: _formKey,
         child: Column(
           children: [
-            AppEmailField(controller: _email, textInputAction: TextInputAction.done),
+            AppEmailField(
+              controller: _email,
+              hint: 'you@cse.jnu.ac.bd',
+              textInputAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+              validator: Validators.compose([
+                Validators.required('Enter your email'),
+                Validators.email(),
+                Validators.universityEmail(),
+              ]),
+            ),
             const Gap(AppSpacing.lg),
-            AppButton(label: 'Send reset link', onPressed: _submit),
+            AppButton(label: 'Send code', onPressed: _submit),
           ],
         ),
       ),

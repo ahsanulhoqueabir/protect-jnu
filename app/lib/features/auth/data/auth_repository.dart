@@ -1,109 +1,142 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/config/env.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/network_providers.dart';
+import '../../../core/storage/token_store.dart';
 import '../domain/user.dart';
 
-/// An interface here (unlike other features) because auth has two backends.
+/// An interface so tests can fake the backend. Endpoints and shapes: docs/api-contract.md.
 abstract interface class AuthRepository {
-  Future<AuthSession> login({required String email, required String password});
-  Future<AuthSession> register({
-    required String name,
+  Future<void> register({
+    required String fullName,
+    required String studentId,
     required String email,
     required String password,
   });
-  Future<void> sendPasswordReset(String email);
-  Future<User> fetchCurrentUser();
-  Future<User> updateProfile(User user);
+
+  /// Marks the email verified. Returns no session (R1): call [login] afterwards.
+  Future<void> verifyOtp({required String email, required String code});
+
+  /// Returns the seconds until another code may be requested.
+  Future<int> resendOtp({required String email, required String purpose});
+
+  Future<AuthSession> login({required String email, required String password});
+  Future<AuthTokens> refresh(String refreshToken);
+  Future<void> logout();
+  Future<User> me();
+  Future<int> forgotPassword(String email);
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  });
 }
 
-/// Real backend. Adjust paths and JSON keys to match your API.
 class ApiAuthRepository implements AuthRepository {
   ApiAuthRepository(this._api);
 
   final ApiClient _api;
 
-  AuthSession _session(Map<String, dynamic> json) =>
-      (token: json['token'] as String, user: User.fromJson(json['user'] as Map<String, dynamic>));
-
-  @override
-  Future<AuthSession> login({required String email, required String password}) async => _session(
-    await _api.post<Map<String, dynamic>>(
-      '/auth/login',
-      data: {'email': email, 'password': password},
-    ),
-  );
-
-  @override
-  Future<AuthSession> register({
-    required String name,
-    required String email,
-    required String password,
-  }) async => _session(
-    await _api.post<Map<String, dynamic>>(
-      '/auth/register',
-      data: {'name': name, 'email': email, 'password': password},
-    ),
-  );
-
-  @override
-  Future<void> sendPasswordReset(String email) =>
-      _api.post<void>('/auth/forgot-password', data: {'email': email});
-
-  @override
-  Future<User> fetchCurrentUser() async =>
-      User.fromJson(await _api.get<Map<String, dynamic>>('/auth/me'));
-
-  @override
-  Future<User> updateProfile(User user) async =>
-      User.fromJson(await _api.put<Map<String, dynamic>>('/auth/me', data: user.toJson()));
-}
-
-/// Demo backend, enabled by `USE_MOCK_AUTH`. Any email and password work, except
-/// `wrong@example.com`, which fails so the error path can be seen.
-class MockAuthRepository implements AuthRepository {
-  static const _delay = Duration(milliseconds: 700);
-
-  User? _user;
-
-  @override
-  Future<AuthSession> login({required String email, required String password}) async {
-    await Future<void>.delayed(_delay);
-    if (email == 'wrong@example.com') {
-      throw const UnauthorizedException('Incorrect email or password');
-    }
-    final name = email.split('@').first;
-    return (token: 'mock-token', user: _user = User(id: '1', name: name, email: email));
+  /// Unwraps `{ "success": true, "data": {...} }`.
+  Map<String, dynamic> _data(Map<String, dynamic> body) {
+    final data = body['data'];
+    if (data is Map<String, dynamic>) return data;
+    throw const BadResponseException();
   }
 
+  AuthTokens _tokens(Map<String, dynamic> session) => AuthTokens.fromJson(session);
+
   @override
-  Future<AuthSession> register({
-    required String name,
+  Future<void> register({
+    required String fullName,
+    required String studentId,
     required String email,
     required String password,
   }) async {
-    await Future<void>.delayed(_delay);
-    return (token: 'mock-token', user: _user = User(id: '1', name: name, email: email));
+    await _api.post<Map<String, dynamic>>(
+      '/api/auth/register',
+      data: {
+        'full_name': fullName,
+        'student_id': studentId.trim().toUpperCase(),
+        'email': email,
+        'password': password,
+      },
+    );
   }
 
   @override
-  Future<void> sendPasswordReset(String email) => Future<void>.delayed(_delay);
-
-  @override
-  Future<User> fetchCurrentUser() async {
-    await Future<void>.delayed(_delay);
-    return _user ?? const User(id: '1', name: 'Demo User', email: 'demo@example.com');
+  Future<void> verifyOtp({required String email, required String code}) async {
+    await _api.post<Map<String, dynamic>>(
+      '/api/auth/verify-otp',
+      data: {'email': email, 'code': code, 'purpose': 'email_verification'},
+    );
   }
 
   @override
-  Future<User> updateProfile(User user) async {
-    await Future<void>.delayed(_delay);
-    return _user = user;
+  Future<int> resendOtp({required String email, required String purpose}) async {
+    final body = await _api.post<Map<String, dynamic>>(
+      '/api/auth/resend-otp',
+      data: {'email': email, 'purpose': purpose},
+    );
+    return (_data(body)['resend_available_in'] as num?)?.toInt() ?? 60;
+  }
+
+  @override
+  Future<AuthSession> login({required String email, required String password}) async {
+    final body = await _api.post<Map<String, dynamic>>(
+      '/api/auth/login',
+      data: {'email': email, 'password': password},
+    );
+    final data = _data(body);
+    return (
+      tokens: _tokens(data['session'] as Map<String, dynamic>),
+      user: User.fromJson(data['user'] as Map<String, dynamic>),
+    );
+  }
+
+  @override
+  Future<AuthTokens> refresh(String refreshToken) async {
+    final body = await _api.post<Map<String, dynamic>>(
+      '/api/auth/refresh',
+      data: {'refresh_token': refreshToken},
+    );
+    return _tokens(_data(body)['session'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<void> logout() async {
+    await _api.post<Map<String, dynamic>>('/api/auth/logout');
+  }
+
+  @override
+  Future<User> me() async {
+    final body = await _api.get<Map<String, dynamic>>('/api/auth/me');
+    return User.fromJson(_data(body)['user'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<int> forgotPassword(String email) async {
+    final body = await _api.post<Map<String, dynamic>>(
+      '/api/auth/forgot-password',
+      data: {'email': email},
+    );
+    return (_data(body)['resend_available_in'] as num?)?.toInt() ?? 60;
+  }
+
+  @override
+  Future<void> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    await _api.post<Map<String, dynamic>>(
+      '/api/auth/reset-password',
+      data: {'email': email, 'code': code, 'new_password': newPassword},
+    );
   }
 }
 
 final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => Env.useMockAuth ? MockAuthRepository() : ApiAuthRepository(ref.watch(apiClientProvider)),
+  (ref) => ApiAuthRepository(ref.watch(apiClientProvider)),
 );

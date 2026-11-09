@@ -4,12 +4,13 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:protect_jnu/core/connectivity/connectivity_provider.dart';
 import 'package:protect_jnu/core/storage/storage_providers.dart';
+import 'package:protect_jnu/core/storage/token_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Pumps [child] inside a [ProviderScope] + [MaterialApp] with in-memory prefs.
 ///
 /// Pass extra [overrides] to fake repositories, e.g.
-/// `postsRepositoryProvider.overrideWithValue(FakePostsRepository())`.
+/// `authRepositoryProvider.overrideWithValue(FakeAuthRepository())`.
 extension PumpApp on WidgetTester {
   Future<void> pumpApp(Widget child, {List<Override> overrides = const []}) async {
     SharedPreferences.setMockInitialValues({});
@@ -20,6 +21,7 @@ extension PumpApp on WidgetTester {
         retry: (_, _) => null,
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
+          tokenStoreProvider.overrideWithValue(TokenStore()),
           isOnlineProvider.overrideWithValue(true),
           ...overrides,
         ],

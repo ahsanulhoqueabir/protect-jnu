@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_spacing.dart';
-
-/// Placeholder logo. Replace the icon with your brand asset; it is used on the
-/// splash, auth and about screens.
+/// Protect JnU'ins logo (assets/branding/logo.png). Square, shown uncropped and
+/// unstretched; used on the splash, auth and loading screens.
 class BrandMark extends StatelessWidget {
   const BrandMark({super.key, this.size = 64});
 
@@ -11,26 +9,24 @@ class BrandMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final logo = Image.asset(
+      'assets/branding/logo.png',
+      width: dark ? size * 0.84 : size,
+      height: dark ? size * 0.84 : size,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
+      semanticLabel: "Protect JnU'ins logo",
+    );
+    // The logo is navy on transparent: give it a white tile on dark themes.
+    if (!dark) return logo;
     return Container(
-      width: size,
-      height: size,
+      padding: EdgeInsets.all(size * 0.08),
       decoration: BoxDecoration(
-        borderRadius: AppRadius.lgAll,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colors.primary, colors.tertiary],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.primary.withValues(alpha: 0.3),
-            blurRadius: size / 3,
-            offset: Offset(0, size / 8),
-          ),
-        ],
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(size * 0.22),
       ),
-      child: Icon(Icons.auto_awesome_rounded, color: colors.onPrimary, size: size * 0.5),
+      child: logo,
     );
   }
 }

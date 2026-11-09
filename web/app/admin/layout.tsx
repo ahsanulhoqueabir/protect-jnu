@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ACCESS_COOKIE } from "@/lib/api/admin-session";
 import { AuthService } from "@/services/auth.service";
+import { BrandLogo } from "@/components/brand-logo";
 import { LogoutButton } from "./logout-button";
 
 /**
@@ -22,7 +23,10 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black">
       <header className="flex items-center justify-between bg-[#1F3A5F] px-6 py-3 text-white">
-        <span className="text-sm font-semibold tracking-wide">
+        <span className="flex items-center gap-3 text-sm font-semibold tracking-wide">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-white p-1">
+            <BrandLogo size={28} priority />
+          </span>
           Protect JnU&apos;ins · Admin
         </span>
         <nav className="flex gap-4 text-sm">

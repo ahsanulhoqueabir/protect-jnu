@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/components/brand-logo";
 import type { ReactNode, InputHTMLAttributes } from "react";
 
 /** Shared look for the admin auth pages. Primary colour #1F3A5F (D-053); restyle here only. */
@@ -14,6 +15,7 @@ export function AuthCard({
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 dark:bg-black">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
+          <BrandLogo size={72} priority className="mx-auto mb-3" />
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#1F3A5F] dark:text-zinc-300">
             Protect JnU&apos;ins · Admin
           </p>

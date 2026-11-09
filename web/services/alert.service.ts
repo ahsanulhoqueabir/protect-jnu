@@ -8,9 +8,13 @@ import type {
   AlertListItem,
   AlertPage,
   AlertStatus,
+  LocationPoint,
 } from "@/types/alert.types";
 
 export const PAGE_SIZE = 20;
+
+/** Short trail on the live map (D-066). */
+export const TRAIL_POINTS = 20;
 
 const GENERIC = "Something went wrong. Please try again.";
 
@@ -195,6 +199,26 @@ export class AlertService {
       });
     } catch (err) {
       console.error("users list error", toMessage(err));
+      return failure(GENERIC, { code: "internal_error" });
+    }
+  }
+
+  /** Newest [limit] location points of an alert, returned oldest first (trail order). */
+  static async recentLocations(
+    alertId: string,
+    limit = TRAIL_POINTS,
+  ): Promise<ServiceResult<LocationPoint[]>> {
+    try {
+      const { data, error } = await getSupabaseServerClient()
+        .from("locations")
+        .select("id,latitude,longitude,accuracy,recorded_at")
+        .eq("alert_id", alertId)
+        .order("recorded_at", { ascending: false })
+        .limit(limit);
+      if (error) throw new Error(error.message);
+      return success((data ?? []).reverse());
+    } catch (err) {
+      console.error("locations error", toMessage(err));
       return failure(GENERIC, { code: "internal_error" });
     }
   }

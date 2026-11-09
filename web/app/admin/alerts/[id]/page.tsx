@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { ACCESS_COOKIE } from "@/lib/api/admin-session";
+import { LiveMap } from "@/components/map/live-map";
 import { notFound } from "next/navigation";
 import { StatusBadge, formatTime } from "@/components/admin/alert-ui";
 import { uuidSchema } from "@/schema/alert.schema";
@@ -17,6 +20,9 @@ export default async function AlertDetailPage({
   const result = await AlertService.detail(id.data);
   if (!result.success) notFound();
   const a = result.data;
+  const locations = await AlertService.recentLocations(a.id);
+  // The layout has already verified this token belongs to an admin (same as the live list).
+  const token = (await cookies()).get(ACCESS_COOKIE)?.value ?? "";
 
   const row = "flex justify-between border-b py-2 text-sm last:border-0";
   return (
@@ -32,6 +38,18 @@ export default async function AlertDetailPage({
       <AlertActions id={a.id} status={a.status} />
 
       <section className="mt-6 rounded border bg-white p-4">
+        <h2 className="mb-2 text-sm font-semibold text-zinc-700">Live location</h2>
+        <LiveMap
+          alertId={a.id}
+          initial={locations.success ? locations.data : []}
+          open={a.status === "active" || a.status === "acknowledged"}
+          accessToken={token}
+          supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
+          publishableKey={process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!}
+        />
+      </section>
+
+      <section className="mt-4 rounded border bg-white p-4">
         <h2 className="mb-2 text-sm font-semibold text-zinc-700">Student</h2>
         <div className={row}><span>Student ID</span><span>{a.student.student_id}</span></div>
         <div className={row}><span>Email</span><span>{a.student.email}</span></div>

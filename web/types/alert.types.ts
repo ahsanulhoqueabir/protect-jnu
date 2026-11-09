@@ -50,3 +50,11 @@ export type AdminUserPage = {
 };
 
 export type AlertAction = "acknowledge" | "resolve";
+
+export type LocationRow = Database["public"]["Tables"]["locations"]["Row"];
+
+/** One point on the live map (no user id; the alert is implied). */
+export type LocationPoint = Pick<
+  LocationRow,
+  "id" | "latitude" | "longitude" | "accuracy" | "recorded_at"
+>;

@@ -35,17 +35,22 @@ class SupabaseLocationUploader implements LocationUploader {
     required List<LocationPoint> points,
   }) async {
     try {
-      await _client().from('locations').insert([
-        for (final p in points)
-          {
-            'alert_id': alertId,
-            'user_id': userId,
-            'latitude': p.latitude,
-            'longitude': p.longitude,
-            if (p.accuracy != null) 'accuracy': p.accuracy,
-            'recorded_at': p.recordedAt.toUtc().toIso8601String(),
-          },
-      ]);
+      // Needs unique (alert_id, recorded_at) from migration 0015; duplicates are skipped.
+      await _client().from('locations').upsert(
+        onConflict: 'alert_id,recorded_at',
+        ignoreDuplicates: true,
+        [
+          for (final p in points)
+            {
+              'alert_id': alertId,
+              'user_id': userId,
+              'latitude': p.latitude,
+              'longitude': p.longitude,
+              if (p.accuracy != null) 'accuracy': p.accuracy,
+              'recorded_at': p.recordedAt.toUtc().toIso8601String(),
+            },
+        ],
+      );
       return UploadOutcome.sent;
     } on PostgrestException catch (e) {
       // 42501 = RLS refused (alert closed); 23503 = alert gone. Anything else may be temporary.

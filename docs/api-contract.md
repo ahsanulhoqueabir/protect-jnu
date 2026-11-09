@@ -98,6 +98,7 @@ Auth: `withAdmin`. Accepts `Authorization: Bearer <access_token>` or, when no he
 |---|---|---|---|
 | GET `/api/admin/alerts?status=open\|all\|active\|acknowledged\|resolved\|cancelled&page=1` | list (`open` = active + acknowledged, default) | 200 `data: { items: [{ id, status, started_at, acknowledged_at, resolved_at, cancelled_at, student: { full_name, student_id } }], page, page_size, total }` | 401, 403 `not_admin`, 422 `validation_failed` |
 | GET `/api/admin/alerts/:id` | detail | 200 `data: { ..., student: { full_name, student_id, phone, email }, contacts: [{ id, name, phone }], acknowledged_by_email, resolved_by_email, first_latitude, first_longitude }` | 404 `alert_not_found` |
+| GET `/api/admin/alerts/:id/locations` | newest 20 location points, oldest first | 200 `data: [{ id, latitude, longitude, accuracy, recorded_at }]` | 404 `alert_not_found` |
 | PATCH `/api/admin/alerts/:id/status` body `{ action: "acknowledge" \| "resolve" }` | transition | 200 `data: { id, status }` | 404 `alert_not_found`, 409 `invalid_transition` (`data.current_status`), 422 |
 | GET `/api/admin/users?page=1` | basic users list | 200 `data: { items: [{ id, full_name, student_id, phone, role, created_at, email, verified }], page, page_size, total }` | 401, 403 |
 

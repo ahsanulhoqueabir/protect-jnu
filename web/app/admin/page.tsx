@@ -1,13 +1,21 @@
-export default function AdminHome() {
+import { cookies } from "next/headers";
+import { ACCESS_COOKIE } from "@/lib/api/admin-session";
+import { AlertService } from "@/services/alert.service";
+import { LiveAlerts } from "./live-alerts";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminHome() {
+  // The layout has already verified this token belongs to an admin.
+  const token = (await cookies()).get(ACCESS_COOKIE)?.value ?? "";
+  const list = await AlertService.list({ status: "open", page: 1 });
+
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">
-        Dashboard
-      </h1>
-      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-        Signed in as an administrator. Live alerts, conversations, users and
-        reports arrive in later phases.
-      </p>
-    </div>
+    <LiveAlerts
+      initial={list.success ? list.data.items : []}
+      accessToken={token}
+      supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
+      publishableKey={process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!}
+    />
   );
 }

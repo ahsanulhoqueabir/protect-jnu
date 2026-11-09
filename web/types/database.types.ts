@@ -25,41 +25,61 @@ export type Database = {
       alerts: {
         Row: {
           acknowledged_at: string | null
+          acknowledged_by: string | null
           cancelled_at: string | null
           first_latitude: number | null
           first_longitude: number | null
           id: string
           last_updated_at: string
           resolved_at: string | null
+          resolved_by: string | null
           started_at: string
           status: Database["public"]["Enums"]["alert_status"]
           user_id: string
         }
         Insert: {
           acknowledged_at?: string | null
+          acknowledged_by?: string | null
           cancelled_at?: string | null
           first_latitude?: number | null
           first_longitude?: number | null
           id?: string
           last_updated_at?: string
           resolved_at?: string | null
+          resolved_by?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["alert_status"]
           user_id: string
         }
         Update: {
           acknowledged_at?: string | null
+          acknowledged_by?: string | null
           cancelled_at?: string | null
           first_latitude?: number | null
           first_longitude?: number | null
           id?: string
           last_updated_at?: string
           resolved_at?: string | null
+          resolved_by?: string | null
           started_at?: string
           status?: Database["public"]["Enums"]["alert_status"]
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "alerts_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "alerts_user_id_fkey"
             columns: ["user_id"]

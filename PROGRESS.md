@@ -1,7 +1,7 @@
 # PROGRESS
 
 Last updated: 2026-11-09
-**Current phase:** Phase 3 DONE 2026-11-09 (user checked every flow on the phone and said OK). Phase 4 NOT STARTED: waiting for the user's explicit go-ahead
+**Current phase:** Phase 3 DONE 2026-11-09 (user checked every flow on the phone and said OK). Phase 4 IN PROGRESS (started 2026-11-09)
 
 Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]` blocked
 
@@ -12,7 +12,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 1 | Supabase schema, RLS, domain enforcement, custom auth data model | Done 2026-11-09 (user-confirmed; open items B-008, B-009, B-012 carried) | 0 |
 | 2 | OTP lifecycle + Brevo integration (server) | Done 2026-11-09 (user-confirmed; both real emails looked good) | 1 |
 | 3 | Auth flows: Flutter + Admin web | Done 2026-11-09 (user-confirmed after manual phone run) | 2 |
-| 4 | SOS flow + live alerts list | Not started | 3 |
+| 4 | SOS flow + live alerts list | Closed 2026-11-09 by user instruction; manual phone/browser checks carried (B-015..B-017) | 3 |
 | 5 | Live location + Leaflet map | Not started | 4 |
 | 6 | Real-time chat | Not started | 4 |
 | 7 | Photo/video capture + local gallery | Not started | 3 (SOS integration: 4) |
@@ -48,6 +48,23 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - NOT DONE: app run on emulator/device. `flutter devices` fails: adb protocol fault, port 5037 held by Code.exe; same error on port 5038; no Android emulator or AVD installed (`D:\Flutter\AndroidSDK\emulator` missing). Brevo sender verification status not confirmed by agent (Q-002).
 - Hosting Q-005: Vercel (recorded).
 
+## Phase 4 tasks
+Status: CLOSED 2026-11-09 by user instruction (user: "complete this phase"; no further tests to be run now). Spec: `docs/phases/phase-4-sos-alerts.md`. Prerequisite Phase 3 done and user-confirmed. Answers 2026-11-09: D-059..D-062 (no location -> send anyway; one open alert per student; student direct insert, admin via server API; beep + toast, card = name/ID/time/status).
+- [x] 1. Location one-shot at SOS time (`features/sos/data/location_service.dart`, geolocator, D-064); permission asked only when the cancel window starts; denied/off/timeout -> null -> alert sent without coordinates (D-059). Not run on a real phone yet
+- [x] 2. Hold 2 s + 5 s cancel window (`domain/sos_flow.dart`). Evidence: `test/features/sos/sos_flow_test.dart` 8 passed with fake time (short press does nothing; alert only after the window; cancel creates no alert and drops the position; denied location sends without coordinates; position that never arrives delays at most 3 s; send error then retry; second press ignored). A real bug found by these tests (non-null location future broke `timeout`) was fixed
+- [x] 3. Alert + first location by RLS insert (`alert_repository.dart`; locations insert failure never fails the SOS). api-contract documents that there is no student alert endpoint (section 6). Real-DB check of the student insert path: `realtime-alerts.test.ts` and `alerts-admin.test.ts` insert as a student client
+- [x] 4. Duplicate rule: DB partial unique index (0013) + app handles 23505 by returning the existing open alert; home hides SOS while an alert is open. Evidence: DB test (23505) and widget test 'an open alert replaces the SOS button'
+- [x] 5. Active Alert screen `/alert` with live status (Realtime stream of the one alert row), cancel for ACTIVE only. Evidence: `test/features/sos/sos_screens_test.dart` 7 widget tests on a 360x700 phone (fake repository: hold/cancel/full flow/denied/open alert/cancel active/acknowledged not cancellable); `flutter analyze` 0 issues; `flutter test` 69 passed. NOT yet run on the physical phone (real Realtime stream, geolocator, permission dialog untested)
+- [x] 6. Web live alerts list `/admin` (`live-alerts.tsx`): Realtime `alerts` changes -> refetch via `/api/admin/alerts`, toast + 3-tone Web Audio beep after 'Enable sound' click, highlighted active rows, poll 5 s while socket down / 30 s while up. Evidence: `tests/integration/realtime-alerts.test.ts` opens real websockets: admin receives the student's INSERT in 493-850 ms (6 recorded runs), owner receives own insert + update, other student receives nothing of A's. FLAKE: 1 of 11 runs delivered no event to the admin socket (cause unknown; 30 s safety poll added). NOT done: browser run with a real admin (UI visual check, sound)
+- [x] 7. Alert detail `/admin/alerts/[id]`: student, emergency contacts, timeline with acting admin, Acknowledge / Mark resolved buttons (server-validated); not browser-checked
+- [x] 8. Admin acknowledge/resolve API (`PATCH /api/admin/alerts/:id/status`), list, detail, users routes; documented in api-contract section 6. `withAuth` now also accepts the `pj_access` cookie when no Authorization header is sent and passes route params. Evidence 2026-11-09: `tests/integration/alerts-admin.test.ts` 6 of 7 passed against the dev project (auth, transitions only active->acknowledged->resolved, 6 parallel acknowledges -> exactly 1 wins, 404/422, detail with contacts, list 20/page, card = name + student ID only, one open alert per student 23505, student sees only own alerts); the 7th (forge admin id) FAILS until 0014 is applied; `npx tsc --noEmit` 0 errors
+- [x] 9. `/admin/history` (status filter, 20/page) and `/admin/users` (20/page) built; not browser-checked. Filters beyond status NOT specified (proposal: none)
+- [~] 10. Latency: DB insert by a student client -> admin websocket event 493-850 ms (see task 6). Full phone-to-browser measurement still to do
+- [x] 0. Migration 0013 run manually by the user; verified by MCP query: 0 alerts, `acknowledged_by`/`resolved_by` exist, index `alerts_one_open_per_user` present. Types in `web/types/database.types.ts` updated to match the generated types
+- [x] 0b. (DONE: user ran 0014; `alerts-admin.test.ts` now 7/7) SECURITY FINDING (column-privilege check): `authenticated` has UPDATE on the new admin id columns and the 0010 trigger did not pin them, so a student cancelling own alert can set `acknowledged_by`/`resolved_by` to any admin id (reproduced by the integration test). Fix written: `web/schemas/0014_pin_alert_admin_ids.sql`. WAITING for the user to run it manually; then re-run `alerts-admin.test.ts` (the forge test must pass)
+- Resolved: location package (geolocator, D-064) and the unique index (0013, D-063)
+- Test accounts 2026-11-09 (user request): all users and dependent rows wiped, then created `b210305040@cse.jnu.ac.bd` (role admin) and `b210305041@cse.jnu.ac.bd` (role user), both confirmed with `email_verified_at` set, no OTP. Verified: both sign in with their password, a wrong password is refused, profiles = 2, other tables empty. Passwords are NOT recorded in the repo. The student must add 2 emergency contacts on first sign-in
+
 ## Phase 3 tasks
 Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-3-auth-flows.md`. Prerequisite Phase 2 done and user-confirmed. Answers 2026-11-09: contacts = name + phone only; phone format = the existing DB checks; web first.
 Web
@@ -67,6 +84,18 @@ Flutter
 - Not independently re-run by the agent: wrong-OTP x5 and expired-code on the phone (covered by the user's report and by the server integration tests from Phase 2); student A vs B RLS on contacts (covered by the Phase 1 matrix, 70/70); admin login in a browser with a real admin account
 - Changes beyond the plan: removed the template `posts` sample feature and the edit-profile screen (they depended on removed routes; the PRD has no profile edit); added a debug-only phone setup note below
 - Phone setup learned: adb must use port 5099 (`ANDROID_ADB_SERVER_PORT=5099`) because VS Code holds 5037 (B-006 resolved this way); Android licenses accepted; Xiaomi needed "Install via USB" enabled. First Gradle build took about 18 minutes
+
+### Phase 4 verify-phase run (2026-11-09, closed on user instruction)
+- PASS web static: `npx tsc --noEmit` 0 errors, `npm run lint` clean, `npm run build` OK (new routes listed), `npm test` 81 passed.
+- PASS alerts API against the real dev project: `alerts-admin.test.ts` 7/7 when run alone (admin-only, transitions only active->acknowledged->resolved, 6 parallel acknowledges -> 1 winner, 404/422, detail+contacts, 20/page, one open alert per student, student sees only own alerts, student cannot forge admin ids after 0014).
+- PASS Realtime: `realtime-alerts.test.ts` real websockets, admin gets the student's INSERT in 493-850 ms (6 runs, target about 3 s); owner gets own events; other student gets none of them.
+- PASS Flutter: `flutter analyze` 0 issues; `flutter test` 69 passed (8 flow tests with fake time, 7 SOS widget tests, existing 54).
+- PASS secrets sweep: no server secret names in `app/lib|config|test`, `web/app/admin`, `web/components`; `NEXT_PUBLIC_*` only the Supabase URL and publishable key. The admin cookie is httpOnly; only the short-lived access token is handed to the Realtime client component (user choice).
+- PASS RLS for alerts: Phase 1 matrix 70/70 plus the Phase 4 tests above (column privilege check found and fixed the 0013 gap with 0014).
+- NOT DONE (carried, user to report): manual browser run of the dashboard with the admin account (visual check, beep, toast); manual phone run of SOS (hold, cancel window, permission dialog, real Realtime status); end-to-end SOS -> dashboard latency on real devices; accidental-trigger check on the phone.
+- FAILING / UNEXPLAINED (not investigated, user said skip): full `npm run test:integration` is NOT green. Parallel run: 2 failures, different each time (404 instead of 409 in alerts-admin; a null profile in auth-flows; realtime test once). One-file-at-a-time run (`--no-file-parallelism`): 77 of 78 passed, the failure being `auth-flows.test.ts > register > rejects a taken email and a taken student ID`, which passed in Phase 2. Suspected cause of the parallel failures: each file's cleanup deletes every `itest-` user, including those of files still running (not confirmed). Suspected cause of the serial failure: not known (the 40-test auth file takes about 4.5 minutes; it was not re-run alone).
+- Not independently confirmed by the agent: that the one flaky Realtime run (1 of 11, no event on the admin socket) is explained.
+- OPEN carried: B-008, B-009, B-011.
 
 ### Phase 3 verify-phase run (2026-11-09)
 - PASS all listed screens work against the real backend (user manual run + agent DB check).
@@ -149,6 +178,9 @@ Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-1-database-rls
 | B-012 | `web/.env.local` `JWT_SECRET_KEY` equals the placeholder committed in `web/.env.example` (compared by equality only, value not printed), so it is a publicly known value. Template `jose` JWT is slated for removal in Phase 2 (D-004/D-005); until then generate a random secret (e.g. 32+ random bytes) and put it only in `.env.local`. `SUPABASE_SECRET_KEY` and the two other Supabase values in `.env.local` differ from the example (good) | User | Phase 2 |
 | B-011 | Unexplained test data: 30 cancelled alerts (one user, 07:55-07:57Z) and 2 active alerts (08:02Z, 08:04Z) exist, created today before the RLS matrix; not created by the agent's migrations or the matrix (rolled back). Probably the user's own testing; confirm or ignore | User | none |
 | B-009 | O1 (docs/phases/phase-1-schema.md 2.7): earlier migrations granted broad DML on auth.* tables to `authenticator` and `service_role`, probably unnecessary. Decide: keep or revoke | User | Phase 1 |
+| B-015 | Integration tests interfere when files run in parallel (shared `itest-` cleanup in `tests/integration/helpers.ts`), so `npm run test:integration` is flaky; suspected, not confirmed. Fix before relying on the suite in Phase 9 (scope each file's cleanup to its own users or run serially) | Agent | Phase 9 |
+| B-016 | `auth-flows.test.ts > register > rejects a taken email and a taken student ID` failed once in a serial run (passed in Phase 2). Not investigated | Agent | Phase 9 |
+| B-017 | Phase 4 manual checks not done: dashboard in a browser with the admin account, SOS on the physical phone, real latency. User will report results | User | Phase 4 sign-off |
 | B-006 | RESOLVED 2026-11-09: adb uses port 5099, licenses accepted, phone connected. Was: (deferred to Phase 3, D-042) `flutter doctor`: Android licenses not accepted; adb fails because port 5037 is held by Code.exe (PID 24392), which answers HTTP. Blocks emulator/device smoke test | User | Phase 0 |
 
 ## Open questions (full list: docs/07-open-questions.md)
@@ -166,6 +198,9 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-025 | `app/` based on template github.com/ahsanulhoqueabir/flutter | User |
 | 2026-11-09 | D-042 | Close Phase 0 with device smoke test deferred to Phase 3 | User |
 | 2026-11-09 | D-053..D-056 | Phase 3 gating answers (recorded only, Phase 3 not started): minimal neutral theme #1F3A5F; flutter_secure_storage + supabase_flutter (versions to verify); local dev server as backend URL; physical Android phone for tests | User |
+| 2026-11-09 | D-065 | Phase 4 closed at the user's instruction before the manual phone/browser checks and with the integration suite not fully green; both recorded as carried (B-015..B-017) | User |
+| 2026-11-09 | D-063 | Migration 0013: delete old test alerts, admin id columns, one-open-alert unique index (user runs manually) | User |
+| 2026-11-09 | D-059..D-062 | Phase 4 answers: SOS without location if denied; one open alert per student; student direct insert + admin server API; beep + toast, card fields | User |
 | 2026-11-09 | D-058 | Phase 3 closed after the user's phone run. Removed template posts sample and edit-profile screen; Flutter dev backend via `adb reverse` (localhost:3000) | User confirmed / agent |
 | 2026-11-09 | D-057 | Phase 3 answers: contacts = name + phone only; phone format = existing DB checks; web first. Agent design (revisable): admin cookies `pj_access`/`pj_refresh`, refresh cookie lifetime 7 days (proposed, not in PRD), new routes `/api/admin/session[/refresh]` | User / agent |
 | 2026-11-09 | D-052 | Email domain = jnu.ac.bd or any subdomain; PRD 5.1 amended | User |
@@ -182,6 +217,7 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-008 | Flutter: Riverpod + go_router, feature-first | User |
 
 ## Change log
+- 2026-11-09: Phase 4 built and closed on user instruction: migrations 0013 (one open alert per student, admin id columns, old test alerts deleted) and 0014 (pin admin ids against client writes); admin alerts/users API, live dashboard, detail, history, users pages; Flutter SOS (hold, cancel window, location, active alert screen). Test accounts recreated (admin + student).
 - 2026-11-09: Phase 0 work: web installs/builds; app on Flutter 3.47.9 with samples removed and checks passing; Supabase project confirmed disposable dev.
 - 2026-11-09: User answers recorded (Supabase/Brevo/Vercel ready, no deadline, student ID format, license OK).
 - 2026-11-09: Delegated decisions recorded. `app/`: renamed to `protect_jnu` / `com.protectjnu.app`, removed ios/linux/macos/windows/web folders; sample features (posts, gallery, onboarding, about) NOT yet removed and `config/*.json` still has placeholder API URL and USE_MOCK_AUTH (needs Flutter analyzer; Flutter not available in this shell). Not built.

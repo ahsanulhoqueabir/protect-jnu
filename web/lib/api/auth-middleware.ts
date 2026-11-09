@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fail, failFromService } from "@/lib/api/api-response";
+import { ACCESS_COOKIE } from "@/lib/api/admin-session";
 import { AuthService } from "@/services/auth.service";
 import type { AuthenticatedUser } from "@/types/auth.types";
 
@@ -8,7 +9,11 @@ export type AuthenticatedHandlerContext = {
   user: AuthenticatedUser;
   /** The validated Supabase access token (needed by logout). Never log it. */
   accessToken: string;
+  /** Resolved dynamic route segments (empty for routes without any). */
+  params: Record<string, string>;
 };
+
+type RouteContext = { params: Promise<Record<string, string>> };
 
 export type AuthenticatedHandler = (
   ctx: AuthenticatedHandlerContext,
@@ -22,17 +27,18 @@ export type AuthenticatedHandler = (
  * @example export const GET = withAuth(async ({ user }) => { … });
  */
 export function withAuth(handler: AuthenticatedHandler) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (
+    req: NextRequest,
+    routeCtx?: RouteContext,
+  ): Promise<NextResponse> => {
+    // Mobile app: `Authorization: Bearer`. Admin dashboard: the httpOnly SameSite=Strict cookie
+    // (D-033), used only when no header is sent.
     const header = req.headers.get("Authorization");
-    if (!header || !header.startsWith("Bearer ")) {
-      return fail({
-        error: "Missing or invalid Authorization header",
-        code: "invalid_token",
-        statusCode: 401,
-      });
-    }
-
-    const accessToken = header.slice(7).trim();
+    const accessToken = header
+      ? header.startsWith("Bearer ")
+        ? header.slice(7).trim()
+        : ""
+      : (req.cookies.get(ACCESS_COOKIE)?.value ?? "");
     if (!accessToken) {
       return fail({
         error: "Missing or invalid Authorization header",
@@ -45,7 +51,8 @@ export function withAuth(handler: AuthenticatedHandler) {
     if (!auth.success) return failFromService(auth);
 
     try {
-      return await handler({ req, user: auth.data, accessToken });
+      const params = routeCtx ? await routeCtx.params : {};
+      return await handler({ req, user: auth.data, accessToken, params });
     } catch {
       return fail({
         error: "An unexpected error occurred",

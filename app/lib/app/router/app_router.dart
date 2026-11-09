@@ -13,6 +13,7 @@ import '../../features/emergency_contacts/presentation/contacts_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/sos/presentation/active_alert_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/status/presentation/legal_screen.dart';
 import '../../features/status/presentation/status_screens.dart';
@@ -95,6 +96,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(path: Routes.contacts, builder: (_, _) => const ContactsScreen()),
+      GoRoute(path: Routes.activeAlert, builder: (_, _) => const ActiveAlertScreen()),
       GoRoute(
         path: Routes.terms,
         builder: (_, _) => const LegalScreen(title: 'Terms of Service'),

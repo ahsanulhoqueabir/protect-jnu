@@ -39,11 +39,14 @@ Flutter location + permission packages (D-023), Supabase Realtime, shadcn/ui com
 - Accidental trigger test (short press does nothing).
 
 ## Completion criteria
-- [ ] End-to-end SOS → dashboard → acknowledge → resolve → student sees status
-- [ ] Notification works
-- [ ] RLS verified for alerts
-- [ ] Latency recorded
-- [ ] PROGRESS updated; user confirmed
+Closed 2026-11-09 on the user's instruction (D-065). Honest status:
+- [~] End-to-end SOS → dashboard → acknowledge → resolve → student sees status: every piece tested separately (API 7/7, Realtime 493-850 ms, 69 Flutter tests); the real phone + browser run was NOT done by the agent (B-017)
+- [~] Notification works: beep + toast built; not heard or seen in a browser (B-017)
+- [x] RLS verified for alerts (Phase 1 matrix + Phase 4 tests, 0014 fix)
+- [~] Latency recorded: database to admin websocket 493-850 ms; phone to browser not measured
+- [x] PROGRESS updated; user instructed closing
+
+Built beyond the spec text: migrations 0013/0014, admin API in `docs/api-contract.md` section 6, decisions D-059..D-065.
 
 ## Out of scope
 Continuous location, map, chat.

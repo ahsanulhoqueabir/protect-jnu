@@ -13,6 +13,8 @@ import 'package:protect_jnu/features/auth/data/auth_repository.dart';
 import 'package:protect_jnu/features/auth/domain/user.dart';
 import 'package:protect_jnu/features/emergency_contacts/data/contacts_repository.dart';
 import 'package:protect_jnu/features/emergency_contacts/domain/emergency_contact.dart';
+import 'package:protect_jnu/features/sos/data/alert_repository.dart';
+import 'package:protect_jnu/features/sos/data/location_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/fakes.dart';
@@ -55,6 +57,8 @@ void main() {
         isOnlineProvider.overrideWithValue(true),
         authRepositoryProvider.overrideWithValue(auth),
         contactsRepositoryProvider.overrideWithValue(contacts),
+        alertRepositoryProvider.overrideWithValue(FakeAlertRepository()),
+        locationServiceProvider.overrideWithValue(FakeLocationService(null)),
       ],
     );
     await tester.pumpWidget(UncontrolledProviderScope(container: container, child: const App()));

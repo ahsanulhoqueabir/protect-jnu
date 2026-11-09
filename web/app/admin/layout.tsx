@@ -25,6 +25,11 @@ export default async function AdminLayout({
         <span className="text-sm font-semibold tracking-wide">
           Protect JnU&apos;ins · Admin
         </span>
+        <nav className="flex gap-4 text-sm">
+          <a href="/admin" className="hover:underline">Live</a>
+          <a href="/admin/history" className="hover:underline">History</a>
+          <a href="/admin/users" className="hover:underline">Users</a>
+        </nav>
         <div className="flex items-center gap-4 text-sm">
           <span className="opacity-80">{auth.data.email}</span>
           <LogoutButton />

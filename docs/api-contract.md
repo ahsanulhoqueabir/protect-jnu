@@ -90,3 +90,15 @@ Body `{ email, code, new_password }`. Verifies the `password_reset` OTP with the
 | R5 | Registering with an already-verified email returns 409 `email_taken` (reveals that the email is registered; university emails are not secret) | Generic success and silent no-op (hides it, confuses real users) |
 | R6 | Registering again with an unverified email keeps the original password, resends an OTP, and never replaces the password (replacing it would let an attacker set the password of someone else's pending account). Recovery via `/forgot-password`, which also verifies the email | Reject with 409 `email_taken` |
 | R7 | OTP wrong-code errors distinguish invalid / expired / attempts exceeded | One generic `otp_invalid` for all |
+
+## 6. Admin alerts API (Phase 4, D-059..D-063)
+Auth: `withAdmin`. Accepts `Authorization: Bearer <access_token>` or, when no header is sent, the dashboard's httpOnly `pj_access` cookie (SameSite=Strict). Role `admin` is re-read on every request. Lists are 20 per page, newest first (D-024). Students create their alert directly through Supabase RLS (D-061); there is no student alert endpoint.
+
+| Route | Purpose | Success | Errors |
+|---|---|---|---|
+| GET `/api/admin/alerts?status=open\|all\|active\|acknowledged\|resolved\|cancelled&page=1` | list (`open` = active + acknowledged, default) | 200 `data: { items: [{ id, status, started_at, acknowledged_at, resolved_at, cancelled_at, student: { full_name, student_id } }], page, page_size, total }` | 401, 403 `not_admin`, 422 `validation_failed` |
+| GET `/api/admin/alerts/:id` | detail | 200 `data: { ..., student: { full_name, student_id, phone, email }, contacts: [{ id, name, phone }], acknowledged_by_email, resolved_by_email, first_latitude, first_longitude }` | 404 `alert_not_found` |
+| PATCH `/api/admin/alerts/:id/status` body `{ action: "acknowledge" \| "resolve" }` | transition | 200 `data: { id, status }` | 404 `alert_not_found`, 409 `invalid_transition` (`data.current_status`), 422 |
+| GET `/api/admin/users?page=1` | basic users list | 200 `data: { items: [{ id, full_name, student_id, phone, role, created_at, email, verified }], page, page_size, total }` | 401, 403 |
+
+Rules: only `active -> acknowledged` and `acknowledged -> resolved`. The update matches only while the row is in the expected state, so concurrent admins cannot both win and a resolved alert cannot be reopened. The acting admin id is stored in `acknowledged_by` / `resolved_by` (0013); timestamps come from the DB trigger.

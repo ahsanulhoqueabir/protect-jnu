@@ -4,6 +4,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:protect_jnu/features/auth/data/auth_repository.dart';
 import 'package:protect_jnu/features/emergency_contacts/data/contacts_repository.dart';
 import 'package:protect_jnu/features/emergency_contacts/domain/emergency_contact.dart';
+import 'package:protect_jnu/features/location/domain/location_point.dart';
+import 'package:protect_jnu/features/location/domain/location_sharing.dart';
 import 'package:protect_jnu/features/sos/data/alert_repository.dart';
 import 'package:protect_jnu/features/sos/data/location_service.dart';
 import 'package:protect_jnu/features/sos/domain/sos_alert.dart';
@@ -87,4 +89,10 @@ class FakeLocationService implements LocationService {
     calls++;
     return fix;
   }
+}
+
+/// Position source that never emits, so no foreground service is started in widget tests.
+class FakePositionSource implements PositionSource {
+  @override
+  Stream<LocationPoint> start() => const Stream.empty();
 }

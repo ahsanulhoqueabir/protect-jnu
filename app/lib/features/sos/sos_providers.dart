@@ -11,7 +11,9 @@ import 'domain/sos_flow.dart';
 
 /// The student's open alert (active or acknowledged), kept fresh through Realtime while one exists.
 /// `null` data = no open alert. Resets when the user changes.
-final openAlertProvider = AsyncNotifierProvider<OpenAlertNotifier, SosAlert?>(OpenAlertNotifier.new);
+final openAlertProvider = AsyncNotifierProvider<OpenAlertNotifier, SosAlert?>(
+  OpenAlertNotifier.new,
+);
 
 class OpenAlertNotifier extends AsyncNotifier<SosAlert?> {
   StreamSubscription<SosAlert>? _sub;

@@ -145,7 +145,10 @@ class SosFlow {
     _emit(const SosSending());
     GeoFix? fix;
     try {
-      fix = await (_fix ?? Future<GeoFix?>.value()).timeout(timings.locationGrace, onTimeout: () => null);
+      fix = await (_fix ?? Future<GeoFix?>.value()).timeout(
+        timings.locationGrace,
+        onTimeout: () => null,
+      );
     } on Object {
       fix = null;
     }

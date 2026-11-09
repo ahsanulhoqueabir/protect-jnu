@@ -39,10 +39,7 @@ class SosButton extends ConsumerWidget {
               child: Semantics(
                 button: true,
                 label: 'SOS. Press and hold for two seconds to send an alert.',
-                child: _Dial(
-                  label: 'SOS',
-                  progress: flow is SosHolding ? flow.progress : null,
-                ),
+                child: _Dial(label: 'SOS', progress: flow is SosHolding ? flow.progress : null),
               ),
             ),
           },

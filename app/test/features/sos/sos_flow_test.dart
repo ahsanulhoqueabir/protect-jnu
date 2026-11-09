@@ -70,18 +70,21 @@ void main() {
     });
   });
 
-  test('hold progress rises from 0 to 1 and releasing after the hold completes does not cancel', () {
-    fakeAsync((async) {
-      final flow = build()..pressStart();
-      async.elapse(const Duration(seconds: 1));
-      final progress = (flow.state as SosHolding).progress;
-      expect(progress, closeTo(0.5, 0.06));
-      async.elapse(const Duration(milliseconds: 1100));
-      flow.pressEnd(); // finger lifted after 2 s: the window is already running
-      expect(flow.state, isA<SosCountdown>());
-      flow.dispose();
-    });
-  });
+  test(
+    'hold progress rises from 0 to 1 and releasing after the hold completes does not cancel',
+    () {
+      fakeAsync((async) {
+        final flow = build()..pressStart();
+        async.elapse(const Duration(seconds: 1));
+        final progress = (flow.state as SosHolding).progress;
+        expect(progress, closeTo(0.5, 0.06));
+        async.elapse(const Duration(milliseconds: 1100));
+        flow.pressEnd(); // finger lifted after 2 s: the window is already running
+        expect(flow.state, isA<SosCountdown>());
+        flow.dispose();
+      });
+    },
+  );
 
   test('cancel inside the window creates no alert and drops the location', () {
     fakeAsync((async) {

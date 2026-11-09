@@ -13,7 +13,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 2 | OTP lifecycle + Brevo integration (server) | Done 2026-11-09 (user-confirmed; both real emails looked good) | 1 |
 | 3 | Auth flows: Flutter + Admin web | Done 2026-11-09 (user-confirmed after manual phone run) | 2 |
 | 4 | SOS flow + live alerts list | Closed 2026-11-09 by user instruction; manual phone/browser checks carried (B-015..B-017) | 3 |
-| 5 | Live location + Leaflet map | Not started | 4 |
+| 5 | Live location + Leaflet map | In progress (started 2026-11-09) | 4 |
 | 6 | Real-time chat | Not started | 4 |
 | 7 | Photo/video capture + local gallery | Not started | 3 (SOS integration: 4) |
 | 8 | Reports + CSV export | Not started | 4 |
@@ -47,6 +47,21 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - PASS env: Brevo names in `.env.example`; user states real values added to `.env.local` (values not read).
 - NOT DONE: app run on emulator/device. `flutter devices` fails: adb protocol fault, port 5037 held by Code.exe; same error on port 5038; no Android emulator or AVD installed (`D:\Flutter\AndroidSDK\emulator` missing). Brevo sender verification status not confirmed by agent (Q-002).
 - Hosting Q-005: Vercel (recorded).
+
+## Phase 5 tasks
+Status: IN PROGRESS (started 2026-11-09). Spec: `docs/phases/phase-5-location-map.md`. Answers: D-066..D-068 (10 s interval, trail 20 points, notification text, SQLite queue 500, plain Leaflet + OSM, Redmi only).
+- [x] 1. Manifest: added FOREGROUND_SERVICE, FOREGROUND_SERVICE_LOCATION, POST_NOTIFICATIONS to the main manifest. Verified in the installed plugin source (geolocator_android 5.2.1): it already declares `GeolocatorLocationService` with `foregroundServiceType="location"` and `ForegroundNotificationConfig` (title, text, channel name, icon, setOngoing, wake lock) exists, so NO new foreground-service package is needed (proposal, revisable). No ACCESS_BACKGROUND_LOCATION: the service starts while the app is in the foreground. Android-14 permission names and the notification runtime permission still to be checked against developer.android.com (not fetched yet); not yet built or run
+- [~] 2. Foreground service = geolocator `getPositionStream` + `ForegroundNotificationConfig` (title/text per D-066), started by `liveLocationControllerProvider` while the alert is open. Code done; NOT run on the phone (notification, permission dialogs untested)
+- [~] 3. 10 s `intervalDuration`, device `recorded_at`, batch insert under RLS (`location_uploader.dart`). Unit-tested with fakes; real insert not yet run
+- [~] 4. SQLite queue (`sqflite`, newest 500) + ordered flush; `location_sharing_test.dart` 7 tests (online, offline then ordered arrival, 500 bound, leftovers flushed, refusal, stop, double start) use the in-memory queue, so the SQLite class itself and airplane mode are NOT yet tested. Dedupe: points are removed only after a successful insert; a lost response could re-send a batch (no unique key on `locations`) - open
+- [~] 5. Controller stops sharing when the alert is not open (cancelled/resolved/none/signed out) and when the server refuses inserts; unit-tested (stream cancelled). Real service stop on the phone NOT verified
+- [ ] 6. Web `LiveMap` (Leaflet, OSM tiles, attribution, marker, 20-point trail, "updated Xs ago")
+- [ ] 7. Initial load + Realtime subscription on `locations`, order by `recorded_at`
+- [ ] 8. Tile failure fallback with coordinates
+- [ ] 9. Map placed in Alert Details page
+- Index `idx_locations_alert_recorded_at (alert_id, recorded_at desc)` already exists (baseline 0000), so no migration needed; any migration goes through MCP + `web/schemas/`
+
+- Evidence so far: `flutter analyze` 0 issues; `flutter test` 76 passed (7 new; SOS widget tests now override the position source/queue/uploader)
 
 ## Phase 4 tasks
 Status: CLOSED 2026-11-09 by user instruction (user: "complete this phase"; no further tests to be run now). Spec: `docs/phases/phase-4-sos-alerts.md`. Prerequisite Phase 3 done and user-confirmed. Answers 2026-11-09: D-059..D-062 (no location -> send anyway; one open alert per student; student direct insert, admin via server API; beep + toast, card = name/ID/time/status).

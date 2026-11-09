@@ -8,6 +8,10 @@ import 'package:protect_jnu/core/storage/token_store.dart';
 import 'package:protect_jnu/features/auth/data/auth_repository.dart';
 import 'package:protect_jnu/features/emergency_contacts/data/contacts_repository.dart';
 import 'package:protect_jnu/features/emergency_contacts/domain/emergency_contact.dart';
+import 'package:protect_jnu/features/location/data/location_queue.dart';
+import 'package:protect_jnu/features/location/data/location_uploader.dart';
+import 'package:protect_jnu/features/location/domain/location_point.dart';
+import 'package:protect_jnu/features/location/location_providers.dart';
 import 'package:protect_jnu/features/sos/data/alert_repository.dart';
 import 'package:protect_jnu/features/sos/data/location_service.dart';
 import 'package:protect_jnu/features/sos/domain/sos_alert.dart';
@@ -48,6 +52,9 @@ void main() {
           ]),
         ),
         alertRepositoryProvider.overrideWithValue(alerts),
+        positionSourceProvider.overrideWithValue(FakePositionSource()),
+        locationQueueProvider.overrideWithValue(InMemoryLocationQueue()),
+        locationUploaderProvider.overrideWithValue(_NoUploader()),
         locationServiceProvider.overrideWithValue(FakeLocationService(location)),
       ],
     );
@@ -88,33 +95,38 @@ void main() {
     expect(alerts.created, isEmpty);
   });
 
-  testWidgets('full flow: alert created after the window, status follows Realtime, SOS returns when closed', (
-    tester,
-  ) async {
-    final alerts = FakeAlertRepository();
-    await boot(tester, alerts: alerts);
-    await holdSos(tester, const Duration(milliseconds: 2100));
-    await tester.pump(const Duration(seconds: 4));
-    expect(alerts.created, isEmpty, reason: 'nothing is sent while the window is open');
-    await tester.pump(const Duration(seconds: 2));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'full flow: alert created after the window, status follows Realtime, SOS returns when closed',
+    (tester) async {
+      final alerts = FakeAlertRepository();
+      await boot(tester, alerts: alerts);
+      await holdSos(tester, const Duration(milliseconds: 2100));
+      await tester.pump(const Duration(seconds: 4));
+      expect(alerts.created, isEmpty, reason: 'nothing is sent while the window is open');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pumpAndSettle();
 
-    expect(alerts.created, hasLength(1));
-    expect(alerts.created.single?.latitude, 23.7);
-    expect(find.text('Alert sent'), findsWidgets);
+      expect(alerts.created, hasLength(1));
+      expect(alerts.created.single?.latitude, 23.7);
+      expect(find.text('Alert sent'), findsWidgets);
 
-    alerts.push(AlertStatus.acknowledged);
-    await tester.pumpAndSettle();
-    expect(find.text('Help is on the way'), findsOneWidget);
+      alerts.push(AlertStatus.acknowledged);
+      await tester.pumpAndSettle();
+      expect(find.text('Help is on the way'), findsOneWidget);
 
-    alerts.push(AlertStatus.resolved);
-    await tester.pumpAndSettle();
-    expect(find.text('Alert resolved'), findsOneWidget);
+      alerts.push(AlertStatus.resolved);
+      await tester.pumpAndSettle();
+      expect(find.text('Alert resolved'), findsOneWidget);
 
-    await tester.tap(find.text('Done'));
-    await tester.pumpAndSettle();
-    expect(find.text('SOS'), findsOneWidget, reason: 'SOS is offered again once the alert is closed');
-  });
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('SOS'),
+        findsOneWidget,
+        reason: 'SOS is offered again once the alert is closed',
+      );
+    },
+  );
 
   testWidgets('location denied: alert still sent without coordinates and the student is told', (
     tester,
@@ -154,11 +166,22 @@ void main() {
     expect(find.text('Alert cancelled'), findsOneWidget);
   });
 
-  testWidgets('a student cannot cancel an acknowledged alert (RLS allows active only)', (tester) async {
+  testWidgets('a student cannot cancel an acknowledged alert (RLS allows active only)', (
+    tester,
+  ) async {
     final alerts = FakeAlertRepository(open: alertWith('y', AlertStatus.acknowledged));
     await boot(tester, alerts: alerts);
     await tester.tap(find.text('View alert status'));
     await tester.pumpAndSettle();
     expect(find.text(cancelLabel), findsNothing);
   });
+}
+
+class _NoUploader implements LocationUploader {
+  @override
+  Future<UploadOutcome> upload({
+    required String alertId,
+    required String userId,
+    required List<LocationPoint> points,
+  }) async => UploadOutcome.sent;
 }

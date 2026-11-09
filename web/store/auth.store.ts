@@ -62,11 +62,11 @@ export const useAuthStore = create<AuthStore>()(
 
         try {
           const { data } = await api_client.post("/auth/login", params);
-          const { user, token } = data.data;
+          const { user, session } = data.data;
 
           set({
             user,
-            accessToken: token,
+            accessToken: session.access_token,
             isProcessing: false,
             error: null,
           });

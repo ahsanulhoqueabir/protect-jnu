@@ -30,9 +30,17 @@ export type RecordContext =
   | Record<string, string>
   | Promise<Record<string, string>>;
 
+/** A failed service call. `code` is a machine code from `lib/api/error-codes.ts`; `data` is safe to return. */
+export type ServiceFailure = {
+  success: false;
+  error: string;
+  code?: string;
+  data?: Record<string, unknown>;
+};
+
 export type ServiceResult<T = unknown> =
   | { success: true; data: T }
-  | { success: false; error: string };
+  | ServiceFailure;
 
 export type QueryParams = Record<string, unknown>;
 export type QueryFilter = Record<string, unknown>;

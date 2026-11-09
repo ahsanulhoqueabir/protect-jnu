@@ -1,17 +1,11 @@
+import { ok, failFromService } from "@/lib/api/api-response";
 import { withAuth } from "@/lib/api/auth-middleware";
-import { ProfileService } from "@/services/profile.service";
-import { fail, ok } from "@/lib/api/api-response";
+import { AuthService } from "@/services/auth.service";
 
-/**
- * GET /api/auth/me
- * Protected — returns `{ user }` for the JWT's profile (client-safe projection).
- */
+/** GET /api/auth/me — the signed-in user's client-safe profile. */
 export const GET = withAuth(async ({ user }) => {
-  const result = await ProfileService.getPublicById(user.profile);
+  const result = await AuthService.me(user.id);
+  if (!result.success) return failFromService(result);
 
-  if (!result.success) {
-    return fail({ error: result.error, statusCode: 404 });
-  }
-
-  return ok({ data: { user: result.data } });
+  return ok({ data: result.data });
 });

@@ -22,6 +22,7 @@ export const ERROR_STATUS = {
   not_admin: 403,
   alert_not_found: 404,
   invalid_transition: 409,
+  chat_closed: 409,
   internal_error: 500,
 } as const;
 

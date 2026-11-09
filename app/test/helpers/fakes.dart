@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:mocktail/mocktail.dart';
+import 'package:protect_jnu/core/network/api_exception.dart';
 import 'package:protect_jnu/features/auth/data/auth_repository.dart';
+import 'package:protect_jnu/features/chat/data/chat_repository.dart';
+import 'package:protect_jnu/features/chat/domain/chat_message.dart';
 import 'package:protect_jnu/features/emergency_contacts/data/contacts_repository.dart';
 import 'package:protect_jnu/features/emergency_contacts/domain/emergency_contact.dart';
 import 'package:protect_jnu/features/location/domain/location_point.dart';
@@ -75,6 +78,70 @@ class FakeAlertRepository implements AlertRepository {
   void push(AlertStatus status) {
     open = SosAlert(id: open!.id, status: status, startedAt: open!.startedAt);
     _updates.add(open!);
+  }
+}
+
+/// In-memory chat backend with a controllable Realtime stream; [failSends] simulates being offline.
+class FakeChatRepository implements ChatRepository {
+  final rows = <ChatMessage>[];
+  final _updates = StreamController<List<ChatMessage>>.broadcast();
+  var failSends = false;
+  var markReadCalls = 0;
+  var _next = 1;
+
+  @override
+  Stream<List<ChatMessage>> watch(String alertId) async* {
+    yield [...rows];
+    yield* _updates.stream;
+  }
+
+  @override
+  Future<ChatMessage> send({
+    required String alertId,
+    required String senderId,
+    required String body,
+  }) async {
+    if (failSends) throw const NetworkException();
+    final m = ChatMessage(
+      id: 'm${_next++}',
+      senderId: senderId,
+      body: body,
+      sentAt: DateTime.utc(2026, 11, 9, 10, 0, _next),
+    );
+    rows.add(m);
+    _updates.add([...rows]);
+    return m;
+  }
+
+  @override
+  Future<void> markRead({required String alertId, required String userId}) async {
+    markReadCalls++;
+    for (var i = 0; i < rows.length; i++) {
+      final m = rows[i];
+      if (m.isUnreadFor(userId)) {
+        rows[i] = ChatMessage(
+          id: m.id,
+          senderId: m.senderId,
+          body: m.body,
+          sentAt: m.sentAt,
+          readAt: DateTime.utc(2026, 11, 9, 11),
+        );
+      }
+    }
+    _updates.add([...rows]);
+  }
+
+  /// An administrator's message arriving through Realtime.
+  void incoming(String body, {String senderId = 'admin-1'}) {
+    rows.add(
+      ChatMessage(
+        id: 'm${_next++}',
+        senderId: senderId,
+        body: body,
+        sentAt: DateTime.utc(2026, 11, 9, 10, 0, _next),
+      ),
+    );
+    _updates.add([...rows]);
   }
 }
 

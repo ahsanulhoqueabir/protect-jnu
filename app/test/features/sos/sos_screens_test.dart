@@ -6,6 +6,7 @@ import 'package:protect_jnu/core/connectivity/connectivity_provider.dart';
 import 'package:protect_jnu/core/storage/storage_providers.dart';
 import 'package:protect_jnu/core/storage/token_store.dart';
 import 'package:protect_jnu/features/auth/data/auth_repository.dart';
+import 'package:protect_jnu/features/chat/data/chat_repository.dart';
 import 'package:protect_jnu/features/emergency_contacts/data/contacts_repository.dart';
 import 'package:protect_jnu/features/emergency_contacts/domain/emergency_contact.dart';
 import 'package:protect_jnu/features/location/data/location_queue.dart';
@@ -52,6 +53,7 @@ void main() {
           ]),
         ),
         alertRepositoryProvider.overrideWithValue(alerts),
+        chatRepositoryProvider.overrideWithValue(FakeChatRepository()),
         positionSourceProvider.overrideWithValue(FakePositionSource()),
         locationQueueProvider.overrideWithValue(InMemoryLocationQueue()),
         locationUploaderProvider.overrideWithValue(_NoUploader()),

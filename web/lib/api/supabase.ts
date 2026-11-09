@@ -28,6 +28,22 @@ export function getSupabaseServerClient(): TypedSupabaseClient {
   return serverClient;
 }
 
+/**
+ * Per-request client that acts AS the caller (publishable key + the caller's validated access token),
+ * so RLS and `auth.uid()` apply (D-028, chat). SERVICES ONLY. Never log the token.
+ */
+export function createSupabaseUserClient(accessToken: string): TypedSupabaseClient {
+  if (!sb.url || !sb.publish) {
+    throw new Error(
+      "Supabase URL and Publishable Key must be defined in environment variables",
+    );
+  }
+  return createClient<Database>(sb.url, sb.publish, {
+    ...clientOptions,
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  });
+}
+
 /** Throwaway publishable-key client for end-user auth calls (e.g. signInWithPassword). */
 export function createSupabaseAuthClient(): TypedSupabaseClient {
   if (!sb.url || !sb.publish) {

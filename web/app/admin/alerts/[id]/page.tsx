@@ -6,6 +6,8 @@ import { notFound } from "next/navigation";
 import { StatusBadge, formatTime } from "@/components/admin/alert-ui";
 import { uuidSchema } from "@/schema/alert.schema";
 import { AlertService } from "@/services/alert.service";
+import { ChatService } from "@/services/chat.service";
+import { ChatPanel } from "@/components/chat/chat-panel";
 import { AlertActions } from "./alert-actions";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +25,7 @@ export default async function AlertDetailPage({
   const locations = await AlertService.recentLocations(a.id);
   // The layout has already verified this token belongs to an admin (same as the live list).
   const token = (await cookies()).get(ACCESS_COOKIE)?.value ?? "";
+  const messages = await ChatService.history(token, a.id);
 
   const row = "flex justify-between border-b py-2 text-sm last:border-0";
   return (
@@ -43,6 +46,18 @@ export default async function AlertDetailPage({
           alertId={a.id}
           initial={locations.success ? locations.data : []}
           open={a.status === "active" || a.status === "acknowledged"}
+          accessToken={token}
+          supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
+          publishableKey={process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!}
+        />
+      </section>
+
+      <section className="mt-4 rounded border bg-white p-4">
+        <h2 className="mb-2 text-sm font-semibold text-zinc-700">Chat</h2>
+        <ChatPanel
+          alertId={a.id}
+          open={a.status === "active" || a.status === "acknowledged"}
+          initial={messages.success ? messages.data : []}
           accessToken={token}
           supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
           publishableKey={process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!}

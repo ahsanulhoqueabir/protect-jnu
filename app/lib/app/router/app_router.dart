@@ -8,6 +8,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/reset_password_screen.dart';
 import '../../features/auth/presentation/verify_email_screen.dart';
+import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/emergency_contacts/contacts_providers.dart';
 import '../../features/emergency_contacts/presentation/contacts_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
@@ -97,6 +98,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.contacts, builder: (_, _) => const ContactsScreen()),
       GoRoute(path: Routes.activeAlert, builder: (_, _) => const ActiveAlertScreen()),
+      GoRoute(path: Routes.alertChat, builder: (_, _) => const ChatScreen()),
       GoRoute(
         path: Routes.terms,
         builder: (_, _) => const LegalScreen(title: 'Terms of Service'),

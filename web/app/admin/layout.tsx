@@ -27,6 +27,7 @@ export default async function AdminLayout({
         </span>
         <nav className="flex gap-4 text-sm">
           <a href="/admin" className="hover:underline">Live</a>
+          <a href="/admin/conversations" className="hover:underline">Conversations</a>
           <a href="/admin/history" className="hover:underline">History</a>
           <a href="/admin/users" className="hover:underline">Users</a>
         </nav>

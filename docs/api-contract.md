@@ -102,4 +102,16 @@ Auth: `withAdmin`. Accepts `Authorization: Bearer <access_token>` or, when no he
 | PATCH `/api/admin/alerts/:id/status` body `{ action: "acknowledge" \| "resolve" }` | transition | 200 `data: { id, status }` | 404 `alert_not_found`, 409 `invalid_transition` (`data.current_status`), 422 |
 | GET `/api/admin/users?page=1` | basic users list | 200 `data: { items: [{ id, full_name, student_id, phone, role, created_at, email, verified }], page, page_size, total }` | 401, 403 |
 
+### 6b. Admin chat API (Phase 6, D-072)
+Same auth as above. The service calls Supabase AS the admin (their access token), so RLS and `chat_conversations()` apply (migration 0016). Students use RLS directly from the phone (no student chat endpoint).
+
+| Route | Purpose | Success | Errors |
+|---|---|---|---|
+| GET `/api/admin/conversations` | last message + unread count per alert, newest first | 200 `data: [{ alert_id, last_body, last_sent_at, last_sender_id, unread_count, student: { full_name, student_id }, status }]` | 401, 403 |
+| GET `/api/admin/alerts/:id/messages[?since=ISO]` | thread, oldest first, newest 200 max; `since` = only newer (reconnect) | 200 `data: [{ id, sender_id, body, sent_at, read_at, sender_name, from_student }]` | 404 `alert_not_found`, 422 |
+| POST `/api/admin/alerts/:id/messages` body `{ body }` (1-1000 chars after trim) | send | 201 `data: { id, sent_at }` | 409 `chat_closed` (alert resolved/cancelled or missing), 422 |
+| PATCH `/api/admin/alerts/:id/messages` | mark the student's messages read (any admin clears it, D-021) | 200 `data: { updated }` | 404 |
+
+Rules: a thread accepts messages only while the alert is active or acknowledged; history stays readable. A user can mark only the other party's messages read, and only `read_at`.
+
 Rules: only `active -> acknowledged` and `acknowledged -> resolved`. The update matches only while the row is in the expected state, so concurrent admins cannot both win and a resolved alert cannot be reopened. The acting admin id is stored in `acknowledged_by` / `resolved_by` (0013); timestamps come from the DB trigger.

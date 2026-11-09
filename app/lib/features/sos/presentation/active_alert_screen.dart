@@ -7,6 +7,8 @@ import '../../../app/theme/app_spacing.dart';
 import '../../../core/utils/extensions.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/feedback/app_feedback.dart';
+import '../../auth/auth_providers.dart';
+import '../../chat/chat_providers.dart';
 import '../domain/sos_alert.dart';
 import '../sos_providers.dart';
 
@@ -45,6 +47,8 @@ class ActiveAlertScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               style: context.textTheme.bodySmall,
             ),
+            const SizedBox(height: AppSpacing.md),
+            _MessagesButton(alertId: alert.id),
             const SizedBox(height: AppSpacing.xl),
             if (alert.status == AlertStatus.active)
               AppButton(
@@ -72,6 +76,24 @@ class ActiveAlertScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Opens the chat; the badge counts administrator messages not yet read (D-072: in-app notice only).
+class _MessagesButton extends ConsumerWidget {
+  const _MessagesButton({required this.alertId});
+
+  final String alertId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final me = ref.watch(currentUserIdProvider);
+    final unread = me == null ? 0 : ref.watch(chatProvider(alertId)).unreadFor(me);
+    return AppButton(
+      label: unread > 0 ? 'Messages ($unread new)' : 'Messages',
+      variant: AppButtonVariant.secondary,
+      onPressed: () => context.push(Routes.alertChat),
     );
   }
 }

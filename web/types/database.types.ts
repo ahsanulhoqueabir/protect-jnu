@@ -306,6 +306,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      chat_conversations: {
+        Args: never
+        Returns: {
+          alert_id: string
+          last_body: string
+          last_sender_id: string
+          last_sent_at: string
+          unread_count: number
+        }[]
+      }
       current_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]

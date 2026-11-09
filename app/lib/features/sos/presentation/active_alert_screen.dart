@@ -73,6 +73,12 @@ class ActiveAlertScreen extends ConsumerWidget {
                   context.go(Routes.home);
                 },
               ),
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              label: 'Take photo or video',
+              variant: AppButtonVariant.secondary,
+              onPressed: () => context.push(Routes.camera),
+            ),
           ],
         ),
       ),

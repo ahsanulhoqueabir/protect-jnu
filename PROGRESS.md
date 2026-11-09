@@ -15,7 +15,7 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 4 | SOS flow + live alerts list | Closed 2026-11-09 by user instruction; manual phone/browser checks carried (B-015..B-017) | 3 |
 | 5 | Live location + Leaflet map | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-018) | 4 |
 | 6 | Real-time chat | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-019) | 4 |
-| 7 | Photo/video capture + local gallery | Not started | 3 (SOS integration: 4) |
+| 7 | Photo/video capture + local gallery | In progress (started 2026-11-09) | 3 (SOS integration: 4) |
 | 8 | Reports + CSV export | Not started | 4 |
 | 9 | Full testing, bug fixing, demo/report prep | Not started | 1–8 |
 
@@ -47,6 +47,17 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - PASS env: Brevo names in `.env.example`; user states real values added to `.env.local` (values not read).
 - NOT DONE: app run on emulator/device. `flutter devices` fails: adb protocol fault, port 5037 held by Code.exe; same error on port 5038; no Android emulator or AVD installed (`D:\Flutter\AndroidSDK\emulator` missing). Brevo sender verification status not confirmed by agent (Q-002).
 - Hosting Q-005: Vercel (recorded).
+
+## Phase 7 tasks
+Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-7-media.md`. Prerequisites: Phase 3 done, Phase 4 closed, Phase 6 closed (D-073). Answers 2026-11-09 (D-074): app-private storage; video 60 s medium quality; delete + alert-id tag in a local index; official `camera` + `video_player`.
+- [x] 1. Verified on pub.dev 2026-11-09 and added: `camera ^0.12.2`, `video_player ^2.14.1`, `path_provider ^2.1.6` (user approved path_provider; all need Dart ^3.12 / Flutter >=3.44, project has 3.47.9). minSdk = `flutter.minSdkVersion`; not separately checked against the camera plugin's own minimum (build will show)
+- [~] 2. Camera/microphone: CAMERA and RECORD_AUDIO added to the manifest; the camera plugin requests them on `initialize`; denial shows a message in `camera_screen.dart`. Denial path NOT run on the phone (the plugin's error code names are matched by substring, unverified)
+- [~] 3. `features/media`: `LocalMediaStore` (app documents/media + `index.json`, serialised writes), 60 s auto-stop, medium quality, alert id tag only while an alert is open. Store tested on real temp files
+- [~] 4. Gallery grid (photo thumbnails via cacheWidth; videos show a play icon, no thumbnail package), viewer with video_player, delete with confirm. Not run on the phone
+- [~] 5. Entry points: Home "Photos and videos", Active Alert "Take photo or video" (below cancel/Done). Camera screen never touches the location service (by code only; NOT checked on the phone with MCP rows)
+- [~] 6. Code review only: `features/media` has no network, Dio or Supabase use. No network inspection done
+- [~] 7. Evidence: `dart run scripts/check.dart` = format OK, analyze 0 issues, 92 tests passed (7 new in `test/features/media/media_test.dart`: file moved into the private folder and survives a new store instance, newest first and missing files dropped, delete, parallel saves, damaged index, provider add/remove, empty gallery). NOT tested: the camera screen (needs a device), permission denial, video playback
+- NOT done: any run on the phone; no `flutter build apk` yet for this phase
 
 ## Phase 6 tasks
 Status: CLOSED 2026-11-09 by user instruction ("close this phase with note that verify phase is not tested"). `verify-phase` was NOT run; no manual phone or browser check was done; completion criteria "bidirectional chat on device + dashboard" and "unread counts correct" are met only by automated tests (see below). Spec: `docs/phases/phase-6-chat.md`. Prerequisites: Phase 4 closed by user (D-065), Phase 5 closed (D-071). D-021 already answered. Gating questions answered 2026-11-09 (D-072): 1000 chars; read-only after resolve/cancel; in-app-only notice; offline = failed + tap to retry; one RPC/view for unread + last message.
@@ -231,6 +242,7 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-025 | `app/` based on template github.com/ahsanulhoqueabir/flutter | User |
 | 2026-11-09 | D-042 | Close Phase 0 with device smoke test deferred to Phase 3 | User |
 | 2026-11-09 | D-053..D-056 | Phase 3 gating answers (recorded only, Phase 3 not started): minimal neutral theme #1F3A5F; flutter_secure_storage + supabase_flutter (versions to verify); local dev server as backend URL; physical Android phone for tests | User |
+| 2026-11-09 | D-074 | Phase 7 answers: app-private storage; video 60 s medium; delete + alert-id tag (local index); official camera + video_player | User |
 | 2026-11-09 | D-073 | Phase 6 closed at the user's instruction without running verify-phase; manual checks carried as B-019 | User |
 | 2026-11-09 | D-072 | Phase 6 answers: 1000-char limit; read-only after resolve/cancel; in-app-only student notice; offline = failed + retry; one RPC/view for unread + last message | User |
 | 2026-11-09 | D-071 | Phase 5 closed at the user's instruction without running verify-phase; manual checks carried as B-018 | User |

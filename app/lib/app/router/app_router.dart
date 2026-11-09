@@ -12,6 +12,9 @@ import '../../features/chat/presentation/chat_screen.dart';
 import '../../features/emergency_contacts/contacts_providers.dart';
 import '../../features/emergency_contacts/presentation/contacts_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/media/presentation/camera_screen.dart';
+import '../../features/media/presentation/gallery_screen.dart';
+import '../../features/media/presentation/media_viewer_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/sos/presentation/active_alert_screen.dart';
@@ -99,6 +102,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.contacts, builder: (_, _) => const ContactsScreen()),
       GoRoute(path: Routes.activeAlert, builder: (_, _) => const ActiveAlertScreen()),
       GoRoute(path: Routes.alertChat, builder: (_, _) => const ChatScreen()),
+      GoRoute(path: Routes.media, builder: (_, _) => const GalleryScreen()),
+      GoRoute(path: Routes.camera, builder: (_, _) => const CameraScreen()),
+      GoRoute(
+        path: Routes.mediaView,
+        builder: (_, state) => MediaViewerScreen(mediaId: state.uri.queryParameters['id'] ?? ''),
+      ),
       GoRoute(
         path: Routes.terms,
         builder: (_, _) => const LegalScreen(title: 'Terms of Service'),

@@ -64,6 +64,12 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ] else
                 const SosButton(),
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(
+                label: 'Photos and videos',
+                variant: AppButtonVariant.secondary,
+                onPressed: () => context.push(Routes.media),
+              ),
             ],
           ),
         ),

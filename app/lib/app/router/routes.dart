@@ -12,6 +12,9 @@ abstract final class Routes {
   static const contacts = '/contacts';
   static const activeAlert = '/alert';
   static const alertChat = '/alert/chat';
+  static const media = '/media';
+  static const camera = '/media/camera';
+  static const mediaView = '/media/view';
   static const profile = '/profile';
   static const settings = '/settings';
 
@@ -23,6 +26,9 @@ abstract final class Routes {
   /// `/verify-email?email=...&sent=1` (`sent` = a code was just emailed, so the 60 s cooldown runs).
   static String verifyEmailFor(String email, {bool sent = false}) =>
       Uri(path: verifyEmail, queryParameters: {'email': email, if (sent) 'sent': '1'}).toString();
+
+  static String mediaViewFor(String id) =>
+      Uri(path: mediaView, queryParameters: {'id': id}).toString();
 
   static String resetPasswordFor(String email) =>
       Uri(path: resetPassword, queryParameters: {'email': email}).toString();

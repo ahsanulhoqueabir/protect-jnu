@@ -14,7 +14,7 @@ class ContactsNotifier extends AsyncNotifier<List<EmergencyContact>> {
   Future<List<EmergencyContact>> build() async {
     final userId = ref.watch(currentUserIdProvider);
     if (userId == null) return const [];
-    return ref.watch(contactsRepositoryProvider).list();
+    return ref.watch(contactsRepositoryProvider).list(userId);
   }
 
   Future<void> add({required String name, required String phone}) async {

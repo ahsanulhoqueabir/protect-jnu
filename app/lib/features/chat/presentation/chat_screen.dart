@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/theme/app_spacing.dart';
 import '../../../core/utils/extensions.dart';
 import '../../auth/auth_providers.dart';
+import '../../notifications/visible_chat_provider.dart';
 import '../../sos/sos_providers.dart';
 import '../chat_providers.dart';
 import '../domain/chat_message.dart';
@@ -19,9 +20,26 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _text = TextEditingController();
   final _scroll = ScrollController();
+  late final VisibleChats _visible;
+  String? _shownFor;
+
+  @override
+  void initState() {
+    super.initState();
+    _visible = ref.read(visibleChatProvider);
+  }
+
+  /// No "new message" notification for the thread already on screen (D-081).
+  void _markVisible(String alertId) {
+    if (_shownFor == alertId) return;
+    if (_shownFor != null) _visible.hide(_shownFor!);
+    _visible.show(alertId);
+    _shownFor = alertId;
+  }
 
   @override
   void dispose() {
+    if (_shownFor != null) _visible.hide(_shownFor!);
     _text.dispose();
     _scroll.dispose();
     super.dispose();
@@ -44,6 +62,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
 
+    _markVisible(alert.id);
     final chat = ref.watch(chatProvider(alert.id));
     final controller = ref.read(chatProvider(alert.id).notifier);
     ref.listen(chatProvider(alert.id), (_, next) {

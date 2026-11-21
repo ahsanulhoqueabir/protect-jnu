@@ -18,6 +18,22 @@ abstract final class Routes {
   static const profile = '/profile';
   static const settings = '/settings';
 
+  // Admin only (D-078). Every path starts with [adminPrefix]; `resolveRedirect` sends non-admins home.
+  static const adminPrefix = '/admin';
+  static const admin = '/admin';
+  static const adminConversations = '/admin/conversations';
+  static const adminHistory = '/admin/history';
+  static const adminUsers = '/admin/users';
+  static const adminReports = '/admin/reports';
+  static const adminAlert = '/admin/alerts/:id';
+  static const adminAlertChat = '/admin/alerts/:id/chat';
+
+  static String adminAlertFor(String id) => '/admin/alerts/${Uri.encodeComponent(id)}';
+  static String adminAlertChatFor(String id) => '${adminAlertFor(id)}/chat';
+
+  static bool isAdminOnly(String location) =>
+      location == adminPrefix || location.startsWith('$adminPrefix/');
+
   static const terms = '/legal/terms';
   static const privacy = '/legal/privacy';
   static const offline = '/offline';

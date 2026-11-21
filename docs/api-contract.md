@@ -92,6 +92,8 @@ Body `{ email, code, new_password }`. Verifies the `password_reset` OTP with the
 | R7 | OTP wrong-code errors distinguish invalid / expired / attempts exceeded | One generic `otp_invalid` for all |
 
 ## 6. Admin alerts API (Phase 4, D-059..D-063)
+**Clients (2026-11-21, D-078):** the admin dashboard (cookie) and the Flutter app for admin accounts (`Authorization: Bearer`, Phase 10). No route changed for the app; every route in 6, 6b and 6c is used by both.
+
 Auth: `withAdmin`. Accepts `Authorization: Bearer <access_token>` or, when no header is sent, the dashboard's httpOnly `pj_access` cookie (SameSite=Strict). Role `admin` is re-read on every request. Lists are 20 per page, newest first (D-024). Students create their alert directly through Supabase RLS (D-061); there is no student alert endpoint.
 
 | Route | Purpose | Success | Errors |

@@ -23,7 +23,7 @@ class OpenAlertNotifier extends AsyncNotifier<SosAlert?> {
     ref.onDispose(() => _sub?.cancel());
     final userId = ref.watch(currentUserIdProvider);
     if (userId == null) return null;
-    final alert = await ref.watch(alertRepositoryProvider).currentOpen();
+    final alert = await ref.watch(alertRepositoryProvider).currentOpen(userId);
     if (alert != null) _watch(alert.id);
     return alert;
   }
@@ -52,7 +52,9 @@ class OpenAlertNotifier extends AsyncNotifier<SosAlert?> {
 
   /// Re-read from the server (pull to refresh, Realtime fallback).
   Future<void> refresh() async {
-    final alert = await ref.read(alertRepositoryProvider).currentOpen();
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return;
+    final alert = await ref.read(alertRepositoryProvider).currentOpen(userId);
     if (alert != null) {
       adopt(alert);
     } else if (state.value?.status.isOpen ?? false) {

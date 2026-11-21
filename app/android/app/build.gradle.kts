@@ -6,10 +6,13 @@ plugins {
 
 android {
     namespace = "com.protectjnu.app"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_local_notifications 23 requires compileSdk 37 or higher (its README); Flutter defaults to 36.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Required by flutter_local_notifications (its README, v23).
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -57,4 +60,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Desugaring library for flutter_local_notifications (version from the plugin README, v23.0.3).
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

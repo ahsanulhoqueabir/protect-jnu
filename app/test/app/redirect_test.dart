@@ -8,12 +8,14 @@ String? redirect(
   bool restoring = false,
   bool signedIn = false,
   bool? contacts = true,
+  bool admin = false,
 }) => resolveRedirect(
   location: location,
   from: from,
   isRestoring: restoring,
   isSignedIn: signedIn,
   hasRequiredContacts: contacts,
+  isAdmin: admin,
 );
 
 void main() {
@@ -63,5 +65,45 @@ void main() {
   test('public pages are always reachable', () {
     expect(redirect(Routes.terms), isNull);
     expect(redirect(Routes.offline, restoring: true), isNull);
+  });
+
+  group('admin screens (D-078)', () {
+    test('an admin reaches every admin route', () {
+      for (final path in [
+        Routes.admin,
+        Routes.adminConversations,
+        Routes.adminHistory,
+        Routes.adminUsers,
+        Routes.adminReports,
+        Routes.adminAlertFor('a1'),
+        Routes.adminAlertChatFor('a1'),
+      ]) {
+        expect(redirect(path, signedIn: true, admin: true), isNull, reason: path);
+      }
+    });
+
+    test('a normal user is sent home from every admin route', () {
+      for (final path in [Routes.admin, Routes.adminReports, Routes.adminAlertFor('a1')]) {
+        expect(redirect(path, signedIn: true), Routes.home, reason: path);
+      }
+    });
+
+    test('a normal user does not follow a remembered admin deep link', () {
+      expect(redirect(Routes.login, signedIn: true, from: '/admin/users'), Routes.home);
+      expect(
+        redirect(Routes.login, signedIn: true, from: '/admin/users', admin: true),
+        '/admin/users',
+      );
+    });
+
+    test('signed-out users go to login first, and admins still need their contacts', () {
+      expect(redirect(Routes.admin), '/login?from=%2Fadmin');
+      expect(redirect(Routes.admin, signedIn: true, admin: true, contacts: false), Routes.contacts);
+    });
+
+    test('paths that only look similar are not admin routes', () {
+      expect(Routes.isAdminOnly('/administrator'), isFalse);
+      expect(Routes.isAdminOnly('/admin'), isTrue);
+    });
   });
 }

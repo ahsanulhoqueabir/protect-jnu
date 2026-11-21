@@ -32,6 +32,17 @@ IDs are used in phase docs and PROGRESS. "PRD §" = section in [PRD.md](PRD.md).
 | FR-REP-2 | Supported = admin acknowledged/resolved; count student once per period; alerts counted separately | 5.6 | P1 | 8 |
 | FR-REP-3 | Month/year filters, monthly bar chart, CSV export; derived from alerts table | 5.6 | P1 | 8 |
 
+### Added 2026-11-21 (Phase 10, D-078..D-082)
+| ID | Requirement | Source | Priority | Phase |
+|---|---|---|---|---|
+| FR-ADM-1 | Role-based access in the app: `role = 'admin'` gets an Admin tab and admin screens; normal users unchanged; server re-checks the role on every admin call | D-078 | P0 | 10 |
+| FR-ADM-2 | Live alerts list with Realtime refresh | D-078 / 5.2 | P0 | 10 |
+| FR-ADM-3 | Alert detail: student, emergency contacts, timeline, acknowledge/resolve | D-078 / 5.2 | P0 | 10 |
+| FR-ADM-4 | Live map in the app (flutter_map + OSM, trail, attribution) | D-079 / 5.3 | P0 | 10 |
+| FR-ADM-5 | Admin chat and conversations with unread counts | D-078 / 5.4 | P0 | 10 |
+| FR-ADM-6 | History (filter, paging), users list, reports with chart and CSV share | D-080 / 5.6 | P1 | 10 |
+| FR-ADM-7 | Notifications with sound and vibration: new SOS and messages (admins), status changes and admin messages (students); tap opens the screen | D-081 | P1 | 10 |
+
 ## Non-functional
 | ID | Requirement | PRD § |
 |---|---|---|
@@ -48,4 +59,4 @@ IDs are used in phase docs and PROGRESS. "PRD §" = section in [PRD.md](PRD.md).
 - Web: Admin Login, Forgot Password, Live Alerts, Alert Details (map, student info, contacts, chat), Conversations, Users, Alert History, Reports.
 
 ## Non-goals (do NOT build)
-iOS; non-university users; guardian SMS/push; safe-spots map; cloud media upload; separate volunteer/university-admin roles; auto-dispatch of police/ambulance; Google Maps; Supabase SMTP/Auth emails.
+iOS; non-university users; guardian SMS; remote push to a closed app (pending B-022; local notifications allowed by D-081); safe-spots map; cloud media upload; separate volunteer/university-admin roles; auto-dispatch of police/ambulance; Google Maps; Supabase SMTP/Auth emails.

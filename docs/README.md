@@ -10,7 +10,8 @@
 | [05-supabase-mcp-workflow.md](05-supabase-mcp-workflow.md) | How Supabase MCP is used in development |
 | [06-development-guidelines.md](06-development-guidelines.md) | Coding, security, testing, git rules for both apps |
 | [07-open-questions.md](07-open-questions.md) | Questions the user must answer; agents must not guess |
-| [phases/](phases/) | One detailed file per phase (0–9) |
+| [phases/](phases/) | One detailed file per phase (0–10) |
+| [project-plan-14-weeks.docx](project-plan-14-weeks.docx) | 14-week project schedule (Word) |
 
 Root files: [../CLAUDE.md](../CLAUDE.md) (agent rules), [../PROGRESS.md](../PROGRESS.md) (tracking), `../.claude/skills/` (CLI skills).
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/config/env.dart';
 import '../core/connectivity/connectivity_provider.dart';
 import '../features/location/location_providers.dart';
+import '../features/notifications/notifications_bridge.dart';
 import '../features/settings/theme_mode_provider.dart';
 import '../shared/widgets/feedback/offline_banner.dart';
 import 'router/app_router.dart';
@@ -24,6 +25,8 @@ class App extends ConsumerWidget {
       builder: (context, child) {
         // Keeps the live-location service in step with the open alert (Phase 5).
         ref.watch(liveLocationControllerProvider);
+        // System notifications for alerts and messages while signed in (D-081).
+        ref.watch(notificationsBridgeProvider);
         final media = MediaQuery.of(context);
         // Honor large text settings, but cap them so layouts stay usable.
         final scaled = media.copyWith(textScaler: media.textScaler.clamp(maxScaleFactor: 1.4));

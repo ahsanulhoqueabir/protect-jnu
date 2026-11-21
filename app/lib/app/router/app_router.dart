@@ -2,6 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/admin/admin_providers.dart';
+import '../../features/admin/presentation/admin_alert_screen.dart';
+import '../../features/admin/presentation/admin_chat_screen.dart';
+import '../../features/admin/presentation/admin_conversations_screen.dart';
+import '../../features/admin/presentation/admin_history_screen.dart';
+import '../../features/admin/presentation/admin_home_screen.dart';
+import '../../features/admin/presentation/admin_reports_screen.dart';
+import '../../features/admin/presentation/admin_users_screen.dart';
 import '../../features/auth/auth_providers.dart';
 import '../../features/auth/presentation/forgot_password_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
@@ -36,6 +44,7 @@ String? resolveRedirect({
   required bool isRestoring,
   required bool isSignedIn,
   bool? hasRequiredContacts = true,
+  bool isAdmin = false,
 }) {
   if (Routes.public.contains(location)) return null;
   if (isRestoring) return location == Routes.splash ? null : Routes.splash;
@@ -52,7 +61,13 @@ String? resolveRedirect({
   if (hasRequiredContacts == null) return location == Routes.splash ? null : Routes.splash;
   if (!hasRequiredContacts) return location == Routes.contacts ? null : Routes.contacts;
   // `from` must be an in-app path: a link like ?from=//evil.com is ignored.
-  if (inEntryFlow) return from != null && _isInternal(from) ? from : Routes.home;
+  if (inEntryFlow) {
+    final target = from != null && _isInternal(from) ? from : Routes.home;
+    // A remembered admin deep link is not honoured for a normal user.
+    return !isAdmin && Routes.isAdminOnly(Uri.parse(target).path) ? Routes.home : target;
+  }
+  // Admin screens: role `admin` only (D-078). The server refuses non-admins as well (403).
+  if (!isAdmin && Routes.isAdminOnly(location)) return Routes.home;
   return null;
 }
 
@@ -64,6 +79,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier(0);
   ref.listen(authProvider, (_, _) => refresh.value++);
   ref.listen(hasRequiredContactsProvider, (_, _) => refresh.value++);
+  ref.listen(isAdminProvider, (_, _) => refresh.value++);
 
   final router = GoRouter(
     initialLocation: Routes.splash,
@@ -77,6 +93,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         isRestoring: auth.isLoading && !auth.hasValue,
         isSignedIn: auth.value != null,
         hasRequiredContacts: auth.value == null ? true : ref.read(hasRequiredContactsProvider),
+        isAdmin: ref.read(isAdminProvider),
       );
     },
     routes: [
@@ -110,6 +127,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, state) => MediaViewerScreen(mediaId: state.uri.queryParameters['id'] ?? ''),
       ),
       GoRoute(
+        path: Routes.adminAlert,
+        builder: (_, state) => AdminAlertScreen(alertId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: Routes.adminAlertChat,
+        builder: (_, state) => AdminChatScreen(alertId: state.pathParameters['id']!),
+      ),
+      GoRoute(path: Routes.adminConversations, builder: (_, _) => const AdminConversationsScreen()),
+      GoRoute(path: Routes.adminHistory, builder: (_, _) => const AdminHistoryScreen()),
+      GoRoute(path: Routes.adminUsers, builder: (_, _) => const AdminUsersScreen()),
+      GoRoute(path: Routes.adminReports, builder: (_, _) => const AdminReportsScreen()),
+      GoRoute(
         path: Routes.terms,
         builder: (_, _) =>
             const LegalScreen(title: 'Terms of Service', sections: LegalContent.terms),
@@ -132,6 +161,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [GoRoute(path: Routes.settings, builder: (_, _) => const SettingsScreen())],
+          ),
+          // Last, so the student's three tabs keep their indexes; the shell shows it to admins only.
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.admin, builder: (_, _) => const AdminHomeScreen())],
           ),
         ],
       ),

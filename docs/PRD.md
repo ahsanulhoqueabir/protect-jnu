@@ -59,6 +59,9 @@ communicate with students, and review incident history.
 
 -   iOS application and access for non-university users.
 -   Guardian SMS or push notifications and a safe-spots map.
+    *(Amended 2026-11-21, D-081: in-app system notifications with sound and vibration for
+    alerts and messages are in scope; guardian SMS stays out of scope; remote push for a
+    closed app is pending, B-022.)*
 -   Uploading photos or videos to cloud storage; captured media remains
     on the student's phone.
 -   Separate volunteer or university-administration roles. This version
@@ -81,6 +84,9 @@ communicate with students, and review incident history.
                                                   close alerts, and view
                                                   monthly/yearly reports
   -----------------------------------------------------------------------
+
+*Amended 2026-11-21 (D-078): admins can also use the Android app. An admin account gets every
+student feature plus admin screens equivalent to the dashboard; the dashboard remains available.*
 
 All users sign in with a Jagannath University email address. A role
 field on each profile (`user` or `admin`) determines whether the account
@@ -391,6 +397,9 @@ user-facing data.
 
 ## 9. Build Phases
 
+*Status note added 2026-11-21 at the project owner's request: phases 1–9 below are completed
+(phase 9 per the project owner, decision D-083). Phase 10 was added on 2026-11-21 (D-078).*
+
 1.  Set up the Supabase project, database schema, Row Level Security,
     and university email-domain enforcement. Connect Supabase MCP for
     development-time schema inspection and database management.
@@ -411,6 +420,11 @@ user-facing data.
 9.  Test authentication, OTP expiry/reuse/rate limits, email delivery,
     Row Level Security, SOS, location tracking, and messaging on real
     Android phones; fix bugs and prepare the demo and report.
+10. *(Added 2026-11-21, D-078.)* Bring every admin dashboard capability into the Flutter app
+    for accounts with the `admin` role (live alerts, alert details with map, emergency
+    contacts and chat, conversations, users, history, reports with CSV), behind role-based
+    access, without changing the normal-user experience. Add notifications with sound and
+    vibration for new alerts, status changes and messages (D-081). Status: in progress.
 
 ## 10. Risks and Mitigations
 

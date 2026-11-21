@@ -8,6 +8,7 @@ import 'app/app.dart';
 import 'core/config/env.dart';
 import 'core/error/error_handling.dart';
 import 'core/network/network_providers.dart';
+import 'core/notifications/app_notifier.dart';
 import 'core/storage/storage_providers.dart';
 import 'core/storage/token_store.dart';
 import 'features/auth/auth_providers.dart';
@@ -43,6 +44,9 @@ Future<void> main() async {
     publishableKey: Env.supabasePublishableKey,
     accessToken: () => container.read(authProvider.notifier).freshAccessToken(),
   );
+
+  // Notification channels and tap handling (D-081). Failure leaves the app working without them.
+  await container.read(appNotifierProvider).init();
 
   runApp(UncontrolledProviderScope(container: container, child: const App()));
 }

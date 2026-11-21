@@ -5,6 +5,12 @@ Status: **DECIDED** (user or PRD) · **OPEN** (must ask the user; agents must no
 ## Decided
 | ID | Decision | Source |
 |---|---|---|
+| D-083 | Phase 9 marked COMPLETED on the user's statement (2026-11-21: "Phase 9 is completed"); the agent did not run or see the Phase 9 test plan, so no Phase 9 evidence exists in this repo | User, 2026-11-21 |
+| D-082 | Admins must also add 2 emergency contacts (same gate as students, since they get every student feature incl. SOS). The Next.js dashboard is kept alongside the app | User, 2026-11-21 |
+| D-081 | PRD 3.2 push non-goal AMENDED: system notifications with sound + vibration via `flutter_local_notifications`, raised from the live Realtime connection while the app process runs; in-app haptics + banners. Remote push for a killed app (FCM) needs a Firebase project, device-token storage and a server sender: not built, tracked as B-022 | User asked "if possible integrate push notification"; scope by agent |
+| D-080 | Mobile reports: `fl_chart` bar chart; CSV from the existing `/api/admin/reports/export` route, shared with `share_plus` | User, 2026-11-21 (recommended option) |
+| D-079 | Mobile map: `flutter_map` + OpenStreetMap tiles (with `latlong2`), OSM attribution shown, no Google Maps | User, 2026-11-21 |
+| D-078 | Phase 10: admin dashboard capabilities added to the Flutter app behind role-based access (`role = 'admin'`); normal users unchanged; admin screens call the existing `/api/admin/*` routes with Bearer tokens (server re-checks the role on every request); student "own alert" and "own contacts" queries now also filter by user id because RLS lets admins read all rows | User, 2026-11-21 |
 | D-001 | ~~Fully custom auth~~ **AMENDED 2026-11-09 by D-027**: Supabase Auth is only the identity/password store (template pattern); OTP, Brevo emails, verification gating and password reset are app-managed in `web/`. Supabase's own emails must still NOT be used | User |
 | D-002 | Trusted server code = Next.js API routes in `web/`; Flutter calls over HTTPS | User 2026-11-09 |
 | D-027 | Adopt template's Supabase Auth identity (`auth.users` + `profiles`, `auth.admin.createUser`, `signInWithPassword`) with our own OTP/Brevo flow on top | User 2026-11-09 |

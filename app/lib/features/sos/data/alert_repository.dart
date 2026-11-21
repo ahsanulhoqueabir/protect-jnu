@@ -7,8 +7,10 @@ import '../domain/sos_alert.dart';
 /// The student's own alerts straight through Supabase; Row Level Security limits every call to
 /// the signed-in student (D-061, D-004, D-028).
 abstract interface class AlertRepository {
-  /// The student's open (active or acknowledged) alert, if any (D-060).
-  Future<SosAlert?> currentOpen();
+  /// The student's own open (active or acknowledged) alert, if any (D-060). Filtered by [userId]
+  /// as well as RLS: RLS lets an admin read every alert, and an admin also uses the student
+  /// features (D-078), so RLS alone would hand an admin another student's alert.
+  Future<SosAlert?> currentOpen(String userId);
 
   /// Creates the alert and, when a fix exists, its first location. If the student already has an
   /// open alert (another device, a double send) that alert is returned instead (D-060).
@@ -29,10 +31,11 @@ class SupabaseAlertRepository implements AlertRepository {
   static const _columns = 'id, status, started_at';
 
   @override
-  Future<SosAlert?> currentOpen() => _guard(() async {
+  Future<SosAlert?> currentOpen(String userId) => _guard(() async {
     final rows = await _client
         .from('alerts')
         .select(_columns)
+        .eq('user_id', userId)
         .inFilter('status', ['active', 'acknowledged'])
         .order('started_at', ascending: false)
         .limit(1);
@@ -55,7 +58,7 @@ class SupabaseAlertRepository implements AlertRepository {
     } on PostgrestException catch (e) {
       // 23505 = alerts_one_open_per_user: an open alert already exists, show that one.
       if (e.code == '23505') {
-        final existing = await currentOpen();
+        final existing = await currentOpen(userId);
         if (existing != null) return existing;
       }
       rethrow;

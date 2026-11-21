@@ -7,7 +7,9 @@ import '../domain/emergency_contact.dart';
 /// Reads and writes `emergency_contacts` straight through Supabase; Row Level Security limits
 /// every call to the signed-in student's own rows (D-004, D-028, D-054).
 abstract interface class ContactsRepository {
-  Future<List<EmergencyContact>> list();
+  /// The user's own contacts. Filtered by [userId] as well as RLS, because RLS lets an admin read
+  /// every student's contacts and an admin also uses the student features (D-078).
+  Future<List<EmergencyContact>> list(String userId);
   Future<EmergencyContact> add({
     required String userId,
     required String name,
@@ -24,8 +26,12 @@ class SupabaseContactsRepository implements ContactsRepository {
   static const _columns = 'id, name, phone';
 
   @override
-  Future<List<EmergencyContact>> list() => _guard(() async {
-    final rows = await _client.from('emergency_contacts').select(_columns).order('created_at');
+  Future<List<EmergencyContact>> list(String userId) => _guard(() async {
+    final rows = await _client
+        .from('emergency_contacts')
+        .select(_columns)
+        .eq('user_id', userId)
+        .order('created_at');
     return rows.map(EmergencyContact.fromJson).toList();
   });
 

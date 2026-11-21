@@ -1,7 +1,7 @@
 # PROGRESS
 
-Last updated: 2026-11-09
-**Current phase:** Phase 8 closed 2026-11-09 by user instruction (verify-phase not run, B-021). Phases 4, 5, 6 and 7 closed the same way. Next: Phase 9 (not started; needs the user's go-ahead)
+Last updated: 2026-11-21
+**Current phase:** Phase 10 (admin features in the mobile app) IN PROGRESS: code and automated tests done 2026-11-21; APK build and phone checks pending (B-023). Phase 9 marked COMPLETED by the user on 2026-11-21 (D-083).
 
 Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]` blocked
 
@@ -17,7 +17,8 @@ Legend: `[ ]` pending · `[~]` in progress · `[x]` done (with evidence) · `[!]
 | 6 | Real-time chat | Closed 2026-11-09 by user instruction; verify-phase NOT run; manual phone/browser checks not done (B-019) | 4 |
 | 7 | Photo/video capture + local gallery | Closed 2026-11-09 by user instruction; verify-phase NOT run; phone checks not done (B-020) | 3 (SOS integration: 4) |
 | 8 | Reports + CSV export | Closed 2026-11-09 by user instruction; verify-phase NOT run; browser/CSV/HTTP checks not done (B-021) | 4 |
-| 9 | Full testing, bug fixing, demo/report prep | Not started | 1–8 |
+| 9 | Full testing, bug fixing, demo/report prep | COMPLETED (marked by the user 2026-11-21, D-083; the agent did not run or see the Phase 9 tests) | 1–8 |
+| 10 | Admin features in the mobile app + notifications | In progress (code + tests done 2026-11-21; build/phone checks pending, B-023) | 9 |
 
 ## Planning tasks (this session)
 - [x] Analyze PRD
@@ -47,6 +48,20 @@ Status: In progress (started 2026-11-09). Spec: `docs/phases/phase-0-prerequisit
 - PASS env: Brevo names in `.env.example`; user states real values added to `.env.local` (values not read).
 - NOT DONE: app run on emulator/device. `flutter devices` fails: adb protocol fault, port 5037 held by Code.exe; same error on port 5038; no Android emulator or AVD installed (`D:\Flutter\AndroidSDK\emulator` missing). Brevo sender verification status not confirmed by agent (Q-002).
 - Hosting Q-005: Vercel (recorded).
+
+## Phase 10 tasks
+Status: IN PROGRESS (started 2026-11-21). Spec: `docs/phases/phase-10-admin-mobile.md`. Answers 2026-11-21: D-078..D-083 (flutter_map; fl_chart + share_plus; local notifications with sound/vibration, FCM if possible -> not possible without Firebase, B-022; admins need 2 contacts; dashboard kept; Phase 9 completed; this is Phase 10). Plan doc: `docs/project-plan-14-weeks.docx`.
+- [x] 0. Repository analysis: dashboard pages mapped to the existing `/api/admin/*` routes (all accept Bearer, `withAdmin` re-reads the role); no backend or DB change needed
+- [x] 1. BUG FIX (found in the analysis): `currentOpen()` (alerts) and contacts `list()` relied on RLS only; RLS lets admins read every row, so a signed-in admin would have seen another student's open alert as their own (and could cancel it) and passed the contacts gate with other students' contacts. Both now filter by user id. Evidence: widget test "an admin's own SOS and contacts queries are scoped to the admin's id"
+- [x] 2. Packages verified on pub.dev and installed (pubspec.lock): flutter_map 8.3.2, latlong2 0.10.1, fl_chart 1.3.1, share_plus 13.3.1, flutter_local_notifications 23.0.3. APIs read from the installed package sources
+- [x] 3. Role-based access: `isAdminProvider`; `resolveRedirect(isAdmin)` sends non-admins away from `/admin*` (also from remembered `from=` deep links); Admin tab is the 4th shell branch, shown only to admins (student tabs keep their indexes). Evidence: redirect tests + widget tests (student sees 3 tabs, admin route redirects home, no admin API call or Realtime channel for a student)
+- [x] 4. `features/admin`: `ApiAdminRepository` (alerts, detail, locations, transition, conversations, messages, send, mark read, users, reports, CSV via new `ApiClient.getText`), `core/realtime/realtime_changes.dart` (Supabase postgres_changes, RLS-scoped) + 30 s polling fallback
+- [x] 5. Screens: Admin home (live alerts + links + unread badge), alert detail (status + confirm, live map, student, contacts with copy, timeline, chat), admin chat (mark read, send, read-only after close), conversations, history (filter + pager), users (pager), reports (fl_chart bars, table, Share CSV from the server export)
+- [x] 6. Notifications (D-081): `core/notifications/app_notifier.dart` (channels sos_alerts / messages / alert_status, SOS vibration pattern, tap -> route, launch-from-notification); `features/notifications/notifications_bridge.dart` (admins: new SOS from others with student name, messages on any thread; everyone: own alert acknowledged/resolved, admin messages on own alert; no notification for the thread on screen). Android 13+ permission requested at sign-in. Student chat screen now registers itself as visible (only change to a student screen)
+- [x] 7. Android: compileSdk 37, core library desugaring + desugar_jdk_libs 2.1.4, AGP 9.1.1 (all from the plugin README)
+- [x] 8. Evidence 2026-11-21 (Flutter 3.47.9 installed in the agent container): `dart run scripts/check.dart` = format OK, analyze 0 issues, 126 tests passed (92 earlier unchanged + 34 new: repository 6, domain 6, redirect 5, admin screens/notifications 17). Two real overflow bugs on a 360 px phone (pager, chart legend) and one in the map attribution were found by the tests and fixed
+- [!] 9. NOT DONE (B-023): `flutter build apk` (Android SDK download blocked in the agent environment); manual run with an admin phone and a student phone (notifications, sound, vibration, map tiles, CSV share sheet, permission prompt); live-API check of the admin routes from the app
+- [ ] 10. verify-phase, then user confirmation
 
 ## Phase 8 tasks
 Status: CLOSED 2026-11-09 by user instruction (no remaining implementation tasks). `verify-phase` was NOT run; the page, chart and CSV download were not checked in a browser (B-021). Spec: `docs/phases/phase-8-reports.md`. Prerequisite Phase 4 closed. Answers 2026-11-09 (D-076): Asia/Dhaka; period = acknowledged_at else resolved_at; shadcn charts (Recharts); summary CSV; one read-only RPC.
@@ -240,6 +255,8 @@ Status: DONE 2026-11-09, user-confirmed. Spec: `docs/phases/phase-1-database-rls
 | B-019 | Phase 6 closed without verify-phase and without manual checks: chat both ways on phone + dashboard, unread badge/counts, read-only after resolve, failed-send retry offline, Dart repository against the real DB (Realtime stream with order/limit, insert, mark read), supabase_flutter resubscribe after a socket drop; one unexplained Realtime test flake (1 of 6) | User | Phase 6 sign-off |
 | B-020 | Phase 7 closed without verify-phase and without phone checks: capture photo/video, files persist after restart, permission-denied messages (plugin error codes matched by substring, unverified), video playback, delete, location rows continue during video capture, network inspection shows no upload. Also: first debug APK build failed once for an uncaptured reason, re-run succeeded | User | Phase 7 sign-off |
 | B-021 | Phase 8 closed without verify-phase and without manual checks: `/admin/reports` in a browser with the admin account (year filter, chart, table), CSV download opened in a spreadsheet, HTTP 401/403 for non-admin on `/api/admin/reports` and `/export` | User | Phase 8 sign-off |
+| B-022 | Remote push to a closed app (FCM) not built: needs a Firebase project (`google-services.json`), a service-account key in server env, a device-token table (migration) and a server-side sender triggered on alert insert (alerts are inserted by the phone under RLS, so a DB webhook or an API hop is also needed). Decide later; local notifications cover a running app (D-081) | User | Phase 10 (optional) |
+| B-023 | Phase 10 not built or run on a device: run `flutter build apk --debug --dart-define-from-file=config/dev.json` (first build downloads Android platform 37 and AGP 9.1.1), then check as admin + student on phones: Admin tab only for the admin, SOS -> admin notification with sound/vibration, acknowledge/resolve, map tiles + attribution, chat both ways, reports CSV share, Android 13 notification permission prompt | User | Phase 10 sign-off |
 | B-006 | RESOLVED 2026-11-09: adb uses port 5099, licenses accepted, phone connected. Was: (deferred to Phase 3, D-042) `flutter doctor`: Android licenses not accepted; adb fails because port 5037 is held by Code.exe (PID 24392), which answers HTTP. Blocks emulator/device smoke test | User | Phase 0 |
 
 ## Open questions (full list: docs/07-open-questions.md)
@@ -248,6 +265,8 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 ## Decisions log
 | Date | ID | Decision | By |
 |---|---|---|---|
+| 2026-11-21 | D-083 | Phase 9 marked completed (user statement); admin integration is Phase 10 | User |
+| 2026-11-21 | D-078..D-082 | Admin features in the app with role-based access; flutter_map + OSM; fl_chart + share_plus; local notifications with sound/vibration (FCM pending B-022); admins need 2 contacts; dashboard kept | User |
 | 2026-11-09 | D-001 | AMENDED by D-027: Supabase Auth as identity store; OTP/Brevo/gating app-managed | User |
 | 2026-11-09 | D-027–D-031 | Adopt template auth identity; PRD RLS + client Realtime; migrations in `web/schemas/` applied via MCP; template layout; one-time copy, no push | User |
 | 2026-11-09 | D-002 | Trusted server = Next.js API routes in `web/` | User |
@@ -283,6 +302,7 @@ Remaining: Brevo verified sender address (Q-002), report/demo format (Q-004), te
 | 2026-11-09 | D-008 | Flutter: Riverpod + go_router, feature-first | User |
 
 ## Change log
+- 2026-11-21: Phase 10 built (code + automated tests): admin features in the Flutter app, role-based routing, notifications, RLS-scoping bug fix for admins; PRD amended at the user's request (Phase 9 status note, Phase 10, roles, notifications); 14-week project plan saved as `docs/project-plan-14-weeks.docx`.
 - 2026-11-09: Phase 8 built and closed on user instruction: migration 0017 (`support_report` RPC, run manually), admin reports API + export, `/admin/reports` page with shadcn chart, CSV helper with formula guard; api-contract 6c.
 - 2026-11-09: Phase 4 built and closed on user instruction: migrations 0013 (one open alert per student, admin id columns, old test alerts deleted) and 0014 (pin admin ids against client writes); admin alerts/users API, live dashboard, detail, history, users pages; Flutter SOS (hold, cancel window, location, active alert screen). Test accounts recreated (admin + student).
 - 2026-11-09: Phase 0 work: web installs/builds; app on Flutter 3.47.9 with samples removed and checks passing; Supabase project confirmed disposable dev.

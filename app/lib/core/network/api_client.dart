@@ -14,6 +14,15 @@ class ApiClient {
   Future<T> get<T>(String path, {Map<String, dynamic>? query, CancelToken? cancelToken}) =>
       _send(() => _dio.get<T>(path, queryParameters: query, cancelToken: cancelToken));
 
+  /// GET a plain-text body (e.g. a CSV download) without JSON decoding.
+  Future<String> getText(String path, {Map<String, dynamic>? query}) => _send(
+    () => _dio.get<String>(
+      path,
+      queryParameters: query,
+      options: Options(responseType: ResponseType.plain),
+    ),
+  );
+
   Future<T> post<T>(String path, {Object? data, Map<String, dynamic>? query}) =>
       _send(() => _dio.post<T>(path, data: data, queryParameters: query));
 

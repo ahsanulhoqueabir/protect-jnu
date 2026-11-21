@@ -22,8 +22,13 @@ class FakeContactsRepository implements ContactsRepository {
   final List<EmergencyContact> rows;
   var _next = 1;
 
+  final listedFor = <String>[];
+
   @override
-  Future<List<EmergencyContact>> list() async => [...rows];
+  Future<List<EmergencyContact>> list(String userId) async {
+    listedFor.add(userId);
+    return [...rows];
+  }
 
   @override
   Future<EmergencyContact> add({
@@ -50,12 +55,17 @@ class FakeAlertRepository implements AlertRepository {
   final _updates = StreamController<SosAlert>.broadcast();
   var cancelCalls = 0;
 
+  final openQueriedFor = <String>[];
+
   @override
-  Future<SosAlert?> currentOpen() async => (open?.status.isOpen ?? false) ? open : null;
+  Future<SosAlert?> currentOpen(String userId) async {
+    openQueriedFor.add(userId);
+    return (open?.status.isOpen ?? false) ? open : null;
+  }
 
   @override
   Future<SosAlert> create({required String userId, GeoFix? fix}) async {
-    final existing = await currentOpen();
+    final existing = await currentOpen(userId);
     if (existing != null) return existing;
     created.add(fix);
     return open = SosAlert(

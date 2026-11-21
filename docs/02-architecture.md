@@ -55,6 +55,9 @@ protect-jnu/
 **Chat:** `messages` rows per alert; Realtime both ways; `read_at` drives unread counts.
 **Reports:** aggregate over `alerts` by status timestamps.
 
+## Admin in the mobile app (Phase 10, D-078)
+The Flutter app shows admin screens to `role = 'admin'` accounts. They call the same `/api/admin/*` routes as the dashboard with a Bearer token (server re-checks the role every time) and use Supabase Realtime under RLS for live refresh. Student queries for "own alert" and "own contacts" filter by user id as well as RLS, because RLS lets admins read every row. Notifications (D-081) are local system notifications raised from the live Realtime connection; there is no push server.
+
 ## Security boundaries
 - Service-role key, JWT signing secret, Brevo key: server env only.
 - OTP/reset tables: RLS enabled with no client policies; server-only.

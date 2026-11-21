@@ -25,7 +25,7 @@ Source of truth for requirements: [docs/PRD.md](docs/PRD.md). Do not edit it unl
 6. **Database changes only via Supabase MCP migrations**, and every migration is also saved as `web/schemas/NNNN_*.sql` (append-only). See `docs/05-supabase-mcp-workflow.md`.
 7. **Secrets**: Brevo key, Supabase service-role key, JWT secret, MCP tokens exist only in server-side env / developer secret storage. Never in `app/`, client bundles, `NEXT_PUBLIC_*`, logs, or git.
 8. **Never log or return** OTPs, reset tokens, password hashes, API keys, or raw provider responses.
-9. **Do not use** Supabase SMTP / Supabase Auth email / Google Maps / cloud media storage / iOS / SMS / push (PRD non-goals).
+9. **Do not use** Supabase SMTP / Supabase Auth email / Google Maps / cloud media storage / iOS / SMS (PRD non-goals). Push: only what D-081 allows (local notifications; FCM pending B-022).
 10. Report faithfully: failing tests or skipped steps must be stated, not hidden.
 
 ## Locked decisions (user-confirmed, 2026-11-09)

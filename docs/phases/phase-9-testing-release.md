@@ -1,5 +1,7 @@
 # Phase 9 — Full Testing, Bug Fixing, Demo & Report Prep
 
+**Status: COMPLETED** (marked by the project owner, 2026-11-21, D-083). The checklist below was not re-run by the agent.
+
 ## Objectives
 Validate the whole system on real Android phones, fix defects, prepare the demo and report.
 

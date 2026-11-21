@@ -14,6 +14,7 @@ PRD §9 defines 9 phases. This plan adds **Phase 0** (accounts, tooling, scaffol
 | 7 | Media capture | Camera + local gallery | 3 | [phase-7](phases/phase-7-media.md) |
 | 8 | Reports | Monthly/yearly stats, chart, CSV | 4 | [phase-8](phases/phase-8-reports.md) |
 | 9 | Testing & release prep | E2E on real phones, bug fixes, demo/report | 1–8 | [phase-9](phases/phase-9-testing-release.md) |
+| 10 | Admin features in the mobile app | Role-based admin screens in Flutter, notifications (added 2026-11-21, D-078) | 9 | [phase-10](phases/phase-10-admin-mobile.md) |
 
 ## Gates
 - A phase is done only when **all** its completion criteria are checked with evidence in PROGRESS.md **and** the user confirms.

@@ -23,7 +23,9 @@ You don't navigate between these by hand. `resolveRedirect` in `lib/app/router/a
 | Not found | any unknown path | Also bad deep links such as `/posts/abc` |
 | Offline, Maintenance | `/offline`, `/maintenance` | Full-screen versions, see below |
 
-Home, Profile and Settings live in `AppShell`: a bottom bar on phones and a side rail on wide screens. Each tab keeps its own back stack.
+| Admin (admins only, D-078) | `/admin`, `/admin/alerts/:id`, `/admin/alerts/:id/chat`, `/admin/conversations`, `/admin/history`, `/admin/users`, `/admin/reports` | `resolveRedirect` sends non-admins to Home; the server re-checks the role (403) |
+
+Home, Profile and Settings live in `AppShell`; admins also get a fourth **Admin** tab: a bottom bar on phones and a side rail on wide screens. Each tab keeps its own back stack.
 
 ## Connecting a real auth backend
 
